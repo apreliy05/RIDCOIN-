@@ -43,9 +43,21 @@
 <div id="score">Очки: 0</div>
 <div id="gameArea"></div>
 
+<!-- Музыка и звук -->
+<audio id="bgMusic" src="music.mp3" loop></audio>
+<audio id="clickSound" src="click.mp3"></audio>
+
 <script>
   let score = 0;
   const gameArea = document.getElementById('gameArea');
+  const bgMusic = document.getElementById('bgMusic');
+  const clickSound = document.getElementById('clickSound');
+
+  // Запуск музыки при старте
+  window.addEventListener('click', function startMusic() {
+    bgMusic.play();
+    window.removeEventListener('click', startMusic);
+  });
 
   function createCoin() {
     const coin = document.createElement('div');
@@ -69,6 +81,8 @@
     coin.addEventListener('click', () => {
       score++;
       document.getElementById('score').textContent = 'Очки: ' + score;
+      clickSound.currentTime = 0;
+      clickSound.play();
       coin.remove();
     });
 
