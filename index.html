@@ -17,7 +17,7 @@
       margin-top: 20px;
       color: #4DA6FF;
     }
-    #instruction {
+    #instruction, #instruction2 {
       font-size: 20px;
       margin: 10px;
       color: #FFD700;
@@ -29,7 +29,7 @@
     #gameArea {
       position: relative;
       width: 100%;
-      height: calc(100vh - 230px);
+      height: calc(100vh - 270px);
       overflow: hidden;
     }
     .coin, .bonusCoin {
@@ -69,6 +69,7 @@
 
 <h1>Лови RIDCOIN!</h1>
 <div id="instruction">Собери 10 монет и получи 1 RIDCOIN!</div>
+<div id="instruction2">Соберите 100 RIDCOIN и сможете вывести их на свой кошелёк!</div>
 <div id="score">Очки: 0</div>
 <div id="ridcoinBalance">RIDCOIN: 0</div>
 <button id="withdrawButton" onclick="withdraw()">Вывести 1 RIDCOIN</button>
