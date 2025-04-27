@@ -27,13 +27,36 @@
       height: calc(100vh - 100px);
       overflow: hidden;
     }
-    .coin {
+    .coin, .bonusCoin {
       position: absolute;
+      cursor: pointer;
+      background-size: cover;
+    }
+    .coin {
       width: 80px;
       height: 80px;
       background-image: url('RIDCOIN.png');
-      background-size: cover;
-      cursor: pointer;
+    }
+    .bonusCoin {
+      width: 120px;
+      height: 120px;
+      background-image: url('RIDCOIN.png');
+      border: 2px solid gold;
+      border-radius: 50%;
+    }
+    .spark {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: gold;
+      border-radius: 50%;
+      opacity: 0.8;
+      pointer-events: none;
+      animation: sparkAnimation 1s ease-out forwards;
+    }
+    @keyframes sparkAnimation {
+      0% { transform: scale(1) translate(0, 0); opacity: 1; }
+      100% { transform: scale(0.5) translate(200px, 200px); opacity: 0; }
     }
   </style>
 </head>
@@ -43,21 +66,9 @@
 <div id="score">Очки: 0</div>
 <div id="gameArea"></div>
 
-<!-- Музыка и звук -->
-<audio id="bgMusic" src="music.mp3" loop></audio>
-<audio id="clickSound" src="click.mp3"></audio>
-
 <script>
   let score = 0;
   const gameArea = document.getElementById('gameArea');
-  const bgMusic = document.getElementById('bgMusic');
-  const clickSound = document.getElementById('clickSound');
-
-  // Запуск музыки при старте
-  window.addEventListener('click', function startMusic() {
-    bgMusic.play();
-    window.removeEventListener('click', startMusic);
-  });
 
   function createCoin() {
     const coin = document.createElement('div');
@@ -81,12 +92,64 @@
     coin.addEventListener('click', () => {
       score++;
       document.getElementById('score').textContent = 'Очки: ' + score;
-      clickSound.currentTime = 0;
-      clickSound.play();
       coin.remove();
+      if (score % 5 === 0) {
+        createBonusCoin();
+      }
     });
 
     fall();
+  }
+
+  function createBonusCoin() {
+    const bonusCoin = document.createElement('div');
+    bonusCoin.classList.add('bonusCoin');
+    bonusCoin.style.left = Math.random() * (window.innerWidth - 120) + 'px';
+    bonusCoin.style.top = '-120px';
+    gameArea.appendChild(bonusCoin);
+
+    let fallSpeed = 3;
+
+    function fall() {
+      const currentTop = parseFloat(bonusCoin.style.top);
+      if (currentTop < window.innerHeight) {
+        bonusCoin.style.top = currentTop + fallSpeed + 'px';
+        requestAnimationFrame(fall);
+      } else {
+        bonusCoin.remove();
+      }
+    }
+
+    bonusCoin.addEventListener('click', (e) => {
+      score += 5;
+      document.getElementById('score').textContent = 'Очки: ' + score;
+      bonusCoin.remove();
+      createSparks(e.clientX, e.clientY);
+    });
+
+    fall();
+  }
+
+  function createSparks(x, y) {
+    for (let i = 0; i < 20; i++) {
+      const spark = document.createElement('div');
+      spark.classList.add('spark');
+      spark.style.left = x + 'px';
+      spark.style.top = y + 'px';
+      gameArea.appendChild(spark);
+
+      // рандомное направление
+      const angle = Math.random() * 2 * Math.PI;
+      const radius = Math.random() * 200;
+
+      spark.style.setProperty('--tx', Math.cos(angle) * radius + 'px');
+      spark.style.setProperty('--ty', Math.sin(angle) * radius + 'px');
+
+      // удалить искру после анимации
+      setTimeout(() => {
+        spark.remove();
+      }, 1000);
+    }
   }
 
   setInterval(createCoin, 1000);
