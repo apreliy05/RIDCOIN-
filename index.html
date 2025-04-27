@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Игра на RIDCOIN</title>
-  <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+  <title>Лови RIDCOIN!</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script> <!-- исправил подключение -->
   <style>
     body {
       margin: 0;
@@ -109,19 +109,14 @@
 
   async function connectWallet() {
     if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        userAddress = accounts[0];
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        signer = provider.getSigner();
-        document.getElementById('walletAddress').innerText = "Кошелек: " + userAddress;
-        alert('Кошелек подключён через Trust Wallet!');
-      } catch (error) {
-        console.error(error);
-        alert('Ошибка подключения кошелька: ' + error.message);
-      }
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = provider.getSigner();
+      userAddress = await signer.getAddress();
+      document.getElementById('walletAddress').innerText = "Кошелек: " + userAddress;
+      alert('Кошелек подключён!');
     } else {
-      alert('Пожалуйста, откройте сайт через встроенный браузер Trust Wallet!');
+      alert('Установите Trust Wallet или откройте через Web3-браузер!');
     }
   }
 
@@ -132,7 +127,7 @@
     }
     if (ridcoinBalance >= 100) {
       const contract = new ethers.Contract(tokenAddress, tokenABI, signer);
-      const amount = ethers.utils.parseUnits("100", 18); // 100 RIDCOIN
+      const amount = ethers.utils.parseUnits("100", 18); // 100 RIDCOIN (если 18 знаков)
       try {
         const tx = await contract.transfer(userAddress, amount);
         await tx.wait();
