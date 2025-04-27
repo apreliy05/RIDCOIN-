@@ -1,3 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Игра на RIDCOIN</title>
+  <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #121212;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      overflow: hidden;
+    }
+    h1 {
+      margin-top: 20px;
+      color: #4DA6FF;
+    }
+    #instruction, #instruction2 {
+      font-size: 20px;
+      margin: 10px;
+      color: #FFD700;
+    }
+    #score, #ridcoinBalance {
+      font-size: 24px;
+      margin: 10px;
+    }
+    #gameArea {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 350px);
+      overflow: hidden;
+    }
+    .coin, .bonusCoin {
+      position: absolute;
+      cursor: pointer;
+      background-size: cover;
+    }
+    .coin {
+      width: 80px;
+      height: 80px;
+      background-image: url('RIDCOIN.png');
+    }
+    .bonusCoin {
+      width: 120px;
+      height: 120px;
+      background-image: url('RIDCOIN.png');
+      border: 2px solid gold;
+      border-radius: 50%;
+    }
+    button {
+      margin: 8px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #withdrawButton, #walletButton {
+      display: none;
+    }
+    #walletAddress {
+      margin: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Лови RIDCOIN!</h1>
+<div id="instruction">Собери 10 монет и получи 1 RIDCOIN!</div>
+<div id="instruction2">Собери 1 RIDCOIN и выведи на свой кошелек!</div>
+<div id="score">Очки: 0</div>
+<div id="ridcoinBalance">RIDCOIN: 0</div>
+
+<button id="connectWalletButton" onclick="connectWallet()">Подключить кошелёк</button>
+<p id="walletAddress"></p>
+
+<button id="withdrawButton" onclick="withdraw()">Обменять 10 очков на 1 RIDCOIN</button>
+<button id="walletButton" onclick="sendToWallet()">Вывести на кошелёк</button>
+
+<div id="gameArea"></div>
+
 <script>
   let score = 0;
   let ridcoinBalance = 0;
@@ -143,3 +235,6 @@
   }, 1000);
 
 </script>
+
+</body>
+</html>
