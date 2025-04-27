@@ -67,17 +67,18 @@
 <div id="gameArea"></div>
 
 <!-- Музыка -->
-<audio id="bgMusic" src="music.mp3" loop autoplay></audio>
+<audio id="bgMusic" src="music.mp3" loop></audio>
 
 <script>
   let score = 0;
   const gameArea = document.getElementById('gameArea');
   const bgMusic = document.getElementById('bgMusic');
+  let musicStarted = false;
 
-  // Попробовать запустить музыку по клику (для телефонов)
   document.body.addEventListener('click', () => {
-    if (bgMusic.paused) {
-      bgMusic.play();
+    if (!musicStarted) {
+      bgMusic.play().catch((e) => { console.log("Ошибка запуска музыки:", e); });
+      musicStarted = true;
     }
   });
 
