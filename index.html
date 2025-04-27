@@ -77,7 +77,7 @@
 <body>
 
 <h1>Лови RIDCOIN!</h1>
-<div id="instruction">Собери 10 монет и получи 1 RIDCOIN!</div>
+<div id="instruction">Собери 1 монету и получи 1 RIDCOIN!</div>
 <div id="instruction2">Собери 1 RIDCOIN и выведи на свой кошелек!</div>
 <div id="score">Очки: 0</div>
 <div id="ridcoinBalance">RIDCOIN: 0</div>
@@ -85,7 +85,7 @@
 <button id="connectWalletButton" onclick="connectWallet()">Подключить кошелёк</button>
 <p id="walletAddress"></p>
 
-<button id="withdrawButton" onclick="withdraw()">Обменять 10 очков на 1 RIDCOIN</button>
+<button id="withdrawButton" onclick="withdraw()">Обменять 1 очко на 1 RIDCOIN</button>
 <button id="walletButton" onclick="sendToWallet()">Вывести на кошелёк</button>
 
 <div id="gameArea"></div>
@@ -108,15 +108,28 @@
   ];
 
   async function connectWallet() {
-    if (window.ethereum) {
-      provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
-      await provider.send("eth_requestAccounts", []);
-      signer = provider.getSigner();
-      userAddress = await signer.getAddress();
-      document.getElementById('walletAddress').innerText = "Кошелек: " + userAddress;
-      alert('Кошелек подключён!');
+    if (typeof window.ethereum !== 'undefined') {
+      try {
+        provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+        await provider.send('eth_requestAccounts', []);
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+
+        const network = await provider.getNetwork();
+        if (network.chainId !== 137) {
+          alert('Пожалуйста, переключитесь на сеть Polygon (Matic) в вашем кошельке.');
+          return;
+        }
+
+        document.getElementById('walletAddress').innerText = "Кошелек: " + userAddress;
+        document.getElementById('connectWalletButton').style.display = 'none';
+        alert('Кошелек подключён!');
+      } catch (err) {
+        console.error(err);
+        alert('Ошибка подключения кошелька: ' + err.message);
+      }
     } else {
-      alert('Установите Trust Wallet или откройте через Web3-браузер!');
+      alert('Web3-кошелек не найден! Откройте сайт через Trust Wallet браузер.');
     }
   }
 
@@ -127,7 +140,7 @@
     }
     if (ridcoinBalance >= 1) {
       const contract = new ethers.Contract(tokenAddress, tokenABI, signer);
-      const amount = ethers.utils.parseUnits("1", 18); // 1 RIDCOIN
+      const amount = ethers.utils.parseUnits("1", 18); // 1 RIDCOIN (если 18 знаков после запятой)
       try {
         const tx = await contract.transfer(userAddress, amount);
         await tx.wait();
@@ -140,7 +153,7 @@
         alert('Ошибка при отправке: ' + error.message);
       }
     } else {
-      alert('Недостаточно RIDCOIN! Нужно минимум 1.');
+      alert('Недостаточно RIDCOIN для вывода.');
     }
   }
 
@@ -167,7 +180,7 @@
       score++;
       updateScore();
       coin.remove();
-      if (score >= 10) {
+      if (score >= 1) {
         withdrawButton.style.display = 'inline-block';
       }
     });
@@ -198,7 +211,7 @@
       score += 5;
       updateScore();
       bonusCoin.remove();
-      if (score >= 10) {
+      if (score >= 1) {
         withdrawButton.style.display = 'inline-block';
       }
     });
@@ -215,11 +228,11 @@
   }
 
   function withdraw() {
-    if (score >= 10) {
-      score -= 10;
+    if (score >= 1) {
+      score -= 1;
       ridcoinBalance += 1;
       updateScore();
-      if (score < 10) {
+      if (score < 1) {
         withdrawButton.style.display = 'none';
       }
       alert('Поздравляем! Вы получили 1 RIDCOIN!');
