@@ -3,92 +3,80 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RIDCOIN</title>
+  <title>Игра на RIDCOIN</title>
   <style>
     body {
-      background-color: #121212;
-      color: #ccc;
-      font-family: 'Arial', sans-serif;
-      text-align: center;
       margin: 0;
-      padding: 0;
-      animation: fadeIn 2s ease-in-out;
+      background-color: #121212;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      overflow: hidden;
+      text-align: center;
     }
     h1 {
+      margin-top: 20px;
       color: #4DA6FF;
-      margin-top: 30px;
-      font-size: 48px;
-      animation: glow 2s ease-in-out infinite alternate;
     }
-    img {
-      margin-top: 20px;
-      width: 150px;
-      height: auto;
-      border-radius: 12px;
-      box-shadow: 0 0 20px #4DA6FF;
-      opacity: 0;
-      animation: appear 2s forwards;
+    #score {
+      font-size: 24px;
+      margin: 10px;
     }
-    p {
-      margin-top: 20px;
-      font-size: 20px;
-      max-width: 90%;
-      margin-left: auto;
-      margin-right: auto;
-      line-height: 1.5;
+    #gameArea {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 100px);
+      overflow: hidden;
     }
-    .address {
-      font-weight: bold;
-      color: #ffffff;
-      margin-top: 10px;
-    }
-    .buy-button {
-      display: inline-block;
-      margin-top: 30px;
-      padding: 15px 30px;
-      font-size: 20px;
-      font-weight: bold;
-      color: #ffffff;
-      background: linear-gradient(45deg, #4DA6FF, #1E90FF);
-      border: none;
-      border-radius: 30px;
-      text-decoration: none;
-      box-shadow: 0 0 15px #4DA6FF;
-      transition: 0.3s ease;
-      animation: appear 3s forwards;
-    }
-    .buy-button:hover {
-      background: linear-gradient(45deg, #1E90FF, #4DA6FF);
-      box-shadow: 0 0 25px #4DA6FF;
-      transform: scale(1.05);
-    }
-    @keyframes glow {
-      from {
-        text-shadow: 0 0 5px #4DA6FF, 0 0 10px #4DA6FF;
-      }
-      to {
-        text-shadow: 0 0 20px #4DA6FF, 0 0 30px #4DA6FF;
-      }
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    @keyframes appear {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
+    .coin {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      background-image: url('RIDCOIN.png');
+      background-size: cover;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>RIDCOIN</h1>
-  <img src="RIDCOIN.png" alt="RIDCOIN Logo">
-  <p>Игровой токен на блокчейне Polygon для цифровых экономик, игр и NFT!</p>
-  <div class="address">
-    Адрес контракта:<br>
-    0xcD36914FD4C560D1475088eB84bB82C11f3E19DE
-  </div>
 
-  <a href="#" class="buy-button">Купить RIDCOIN</a>
+<h1>Лови RIDCOIN!</h1>
+<div id="score">Очки: 0</div>
+<div id="gameArea"></div>
+
+<script>
+  let score = 0;
+  const gameArea = document.getElementById('gameArea');
+
+  function createCoin() {
+    const coin = document.createElement('div');
+    coin.classList.add('coin');
+    coin.style.left = Math.random() * (window.innerWidth - 80) + 'px';
+    coin.style.top = '-80px';
+    gameArea.appendChild(coin);
+
+    let fallSpeed = 2 + Math.random() * 3;
+
+    function fall() {
+      const currentTop = parseFloat(coin.style.top);
+      if (currentTop < window.innerHeight) {
+        coin.style.top = currentTop + fallSpeed + 'px';
+        requestAnimationFrame(fall);
+      } else {
+        coin.remove();
+      }
+    }
+
+    coin.addEventListener('click', () => {
+      score++;
+      document.getElementById('score').textContent = 'Очки: ' + score;
+      coin.remove();
+    });
+
+    fall();
+  }
+
+  setInterval(createCoin, 1000);
+</script>
+
 </body>
 </html>
