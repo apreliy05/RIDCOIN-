@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Игра на RIDCOIN</title>
-  <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
     body {
       margin: 0;
@@ -86,7 +86,7 @@
 <p id="walletAddress"></p>
 
 <button id="withdrawButton" onclick="withdraw()">Обменять 10 очков на 1 RIDCOIN</button>
-<button id="walletButton" onclick="sendToWallet()">Вывести на кошелёк</button>
+<button id="walletButton" onclick="sendToWallet()">Вывести 1 RIDCOIN на кошелёк</button>
 
 <div id="gameArea"></div>
 
@@ -108,31 +108,20 @@
   ];
 
   async function connectWallet() {
-    if (window.ethereum) {
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = provider.getSigner();
-      userAddress = await signer.getAddress();
-
-      // Проверка сети
-      const { chainId } = await provider.getNetwork();
-      if (chainId !== 137) { // 137 = Polygon Mainnet
-        try {
-          await window.ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x89' }], // 137 в HEX
-          });
-        } catch (switchError) {
-          if (switchError.code === 4902) {
-            alert('Добавьте сеть Polygon вручную в кошельке!');
-          }
-        }
+    try {
+      if (typeof window.ethereum !== 'undefined') {
+        provider = new ethers.providers.Web3Provider(window.ethereum, "any");
+        await provider.send("eth_requestAccounts", []);
+        signer = provider.getSigner();
+        userAddress = await signer.getAddress();
+        document.getElementById('walletAddress').innerText = "Кошелек: " + userAddress;
+        alert('Кошелек подключён!');
+      } else {
+        alert('Кошелек не найден! Используйте браузер Trust Wallet или MetaMask.');
       }
-
-      document.getElementById('walletAddress').innerText = "Кошелек: " + userAddress;
-      alert('Кошелек подключён к Polygon!');
-    } else {
-      alert('Установите Trust Wallet или используйте Web3-браузер!');
+    } catch (error) {
+      console.error(error);
+      alert('Ошибка подключения кошелька: ' + error.message);
     }
   }
 
@@ -143,7 +132,7 @@
     }
     if (ridcoinBalance >= 1) {
       const contract = new ethers.Contract(tokenAddress, tokenABI, signer);
-      const amount = ethers.utils.parseUnits("1", 18); // 1 RIDCOIN
+      const amount = ethers.utils.parseUnits("1", 18); // 1 RIDCOIN (18 знаков после запятой)
       try {
         const tx = await contract.transfer(userAddress, amount);
         await tx.wait();
@@ -153,10 +142,10 @@
         walletButton.style.display = 'none';
       } catch (error) {
         console.error(error);
-        alert('Ошибка при отправке: ' + error.message);
+        alert('Ошибка при отправке токенов: ' + error.message);
       }
     } else {
-      alert('Недостаточно RIDCOIN для вывода!');
+      alert('Недостаточно RIDCOIN! Нужно минимум 1.');
     }
   }
 
