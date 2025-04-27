@@ -4,13 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Игра на RIDCOIN</title>
-
-  <!-- Ethers.js -->
   <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
-
-  <!-- WalletConnect -->
-  <script src="https://unpkg.com/@walletconnect/web3-provider@1.8.0/dist/umd/index.min.js"></script>
-
   <style>
     body {
       margin: 0;
@@ -108,32 +102,21 @@
   let provider;
   let signer;
   let userAddress;
-
   const tokenAddress = "0xcD36914FD4C560D1475088eB84bB82C11f3E19DE"; // Адрес контракта RIDCOIN
   const tokenABI = [
     "function transfer(address to, uint amount) public returns (bool)"
   ];
 
   async function connectWallet() {
-    try {
-      const walletConnectProvider = new WalletConnectProvider.default({
-        rpc: {
-          137: "https://polygon-rpc.com/"
-        },
-        chainId: 137,
-      });
-
-      await walletConnectProvider.enable(); // Открывает QR или Trust Wallet
-
-      provider = new ethers.providers.Web3Provider(walletConnectProvider);
+    if (window.ethereum) {
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
       signer = provider.getSigner();
       userAddress = await signer.getAddress();
-
       document.getElementById('walletAddress').innerText = "Кошелек: " + userAddress;
-      alert('Кошелек подключён через WalletConnect!');
-    } catch (error) {
-      console.error(error);
-      alert('Ошибка подключения кошелька!');
+      alert('Кошелек подключён через браузер Trust Wallet!');
+    } else {
+      alert('Пожалуйста, откройте через встроенный браузер Trust Wallet!');
     }
   }
 
@@ -144,11 +127,11 @@
     }
     if (ridcoinBalance >= 100) {
       const contract = new ethers.Contract(tokenAddress, tokenABI, signer);
-      const amount = ethers.utils.parseUnits("100", 18); // 100 RIDCOIN (если 18 знаков)
+      const amount = ethers.utils.parseUnits("100", 18); // 100 RIDCOIN
       try {
         const tx = await contract.transfer(userAddress, amount);
         await tx.wait();
-        alert('RIDCOIN успешно отправлен на ваш кошелек!');
+        alert('RIDCOIN успешно отправлены на ваш кошелек!');
         ridcoinBalance = 0;
         updateScore();
         walletButton.style.display = 'none';
