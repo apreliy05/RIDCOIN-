@@ -1,126 +1,127 @@
-<!DOCTYPE html>
-<html lang="ru">
+<!DOCTYPE html><html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Лови RIDCOIN!</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #000;
-      color: #fff;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-    h1 {
-      margin-top: 30px;
-      color: #4682B4;
-    }
-    p {
-      color: #FFD700;
-      font-size: 20px;
-    }
-    #score, #ridcoin {
-      font-size: 24px;
-      margin: 10px 0;
-    }
-    #connectButton {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 18px;
-      background-color: #4CAF50;
-      border: none;
-      border-radius: 10px;
-      color: white;
-    }
-    .coin {
-      position: absolute;
-      width: 80px;
-      height: 80px;
-      background-image: url('https://i.ibb.co/9wpg5df/ridcoin.png');
-      background-size: cover;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лови RIDCOIN!</title>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        #gameArea {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin-top: 20px;
+            overflow: hidden;
+            border: 1px solid white;
+        }
+        .coin {
+            width: 50px;
+            position: absolute;
+            cursor: pointer;
+        }
+        #connectButton {
+            background-color: green;
+            color: white;
+            padding: 10px;
+            border: none;
+            margin-top: 10px;
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
-  <h1>Лови <b>RIDCOIN!</b></h1>
-  <p>Собери 10 монет и получи 1 RIDCOIN!<br>Собери 1 RIDCOIN и выведи на свой кошелек!</p>
-  <div id="score">Очки: 0</div>
-  <div id="ridcoin">RIDCOIN: 0</div>
-  <button id="connectButton">Подключить кошелек</button>
-
-  <script>
-    let score = 0;
-    let ridcoins = 0;
-    let signer;
-    let provider;
-    let userAddress;
-    const contractAddress = "0xcD36914FD4C560D1475088eB84bB82C11f3E19DE";
-    const tokenAbi = [
-      "function transfer(address to, uint amount) public returns (bool)"
+    <h1>Лови RIDCOIN!</h1>
+    <p>Собери 10 монет и получи 1 RIDCOIN!<br>Собери 1 RIDCOIN и выведи на свой кошелек!</p>
+    <p>Очки: <span id="score">0</span><br>RIDCOIN: <span id="ridcoin">0</span></p>
+    <button id="connectButton">Подключить кошелек</button>
+    <div id="gameArea"></div><script>
+    const contractAddress = "0xcD36914FD4C560D1475088eB84bB82C11f3E19DE"; // Твой адрес контракта
+    const abi = [
+        "function transfer(address to, uint amount) public returns (bool)",
+        "function balanceOf(address owner) view returns (uint)"
     ];
 
-    async function connectWallet() {
-      if (window.ethereum) {
-        try {
-          await ethereum.request({ method: "eth_requestAccounts" });
-          provider = new ethers.providers.Web3Provider(window.ethereum);
-          signer = provider.getSigner();
-          userAddress = await signer.getAddress();
-          alert("Кошелек подключен: " + userAddress);
-        } catch (error) {
-          alert("Ошибка подключения кошелька: " + error.message);
+    let provider;
+    let signer;
+    let contract;
+    let userAddress;
+
+    const scoreElem = document.getElementById('score');
+    const ridcoinElem = document.getElementById('ridcoin');
+    const connectButton = document.getElementById('connectButton');
+
+    let score = 0;
+    let ridcoins = 0;
+
+    connectButton.onclick = async () => {
+        if (typeof window.ethereum !== 'undefined') {
+            try {
+                await ethereum.request({ method: 'eth_requestAccounts' });
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                const network = await provider.getNetwork();
+
+                if (network.chainId !== 137) { // 137 = Polygon
+                    alert("Пожалуйста, переключитесь на сеть Polygon (Matic)");
+                    return;
+                }
+
+                userAddress = await signer.getAddress();
+                contract = new ethers.Contract(contractAddress, abi, signer);
+                alert("Кошелек подключен: " + userAddress);
+            } catch (error) {
+                alert("Ошибка подключения кошелька: " + error.message);
+            }
+        } else {
+            alert("Установите MetaMask!");
         }
-      } else {
-        alert("Установите MetaMask!");
-      }
+    };
+
+    function spawnCoin() {
+        const coin = document.createElement('img');
+        coin.src = 'https://i.imgur.com/YOUR_COIN_IMAGE.png'; // Замени на свою картинку
+        coin.classList.add('coin');
+        coin.style.left = Math.random() * (window.innerWidth - 50) + 'px';
+        coin.style.top = Math.random() * 350 + 'px';
+        coin.onclick = () => {
+            coin.remove();
+            score++;
+            scoreElem.innerText = score;
+
+            if (score >= 10) {
+                ridcoins++;
+                score = 0;
+                ridcoinElem.innerText = ridcoins;
+                scoreElem.innerText = 0;
+                sendRidcoin();
+            }
+        };
+        document.getElementById('gameArea').appendChild(coin);
+
+        setTimeout(() => coin.remove(), 4000);
     }
 
-    document.getElementById("connectButton").addEventListener("click", connectWallet);
-
-    function createCoin() {
-      const coin = document.createElement("div");
-      coin.classList.add("coin");
-      coin.style.top = Math.random() * (window.innerHeight - 100) + "px";
-      coin.style.left = Math.random() * (window.innerWidth - 100) + "px";
-      coin.onclick = () => {
-        score++;
-        document.getElementById("score").innerText = "Очки: " + score;
-        coin.remove();
-
-        if (score >= 10) {
-          score = 0;
-          ridcoins++;
-          document.getElementById("score").innerText = "Очки: " + score;
-          document.getElementById("ridcoin").innerText = "RIDCOIN: " + ridcoins;
-          sendRidcoin();
-        }
-      };
-      document.body.appendChild(coin);
-      setTimeout(() => coin.remove(), 5000);
-    }
-
-    setInterval(createCoin, 800);
+    setInterval(spawnCoin, 1000);
 
     async function sendRidcoin() {
-      if (!signer) {
-        alert("Пожалуйста, подключите кошелек сначала!");
-        return;
-      }
-
-      try {
-        const contract = new ethers.Contract(contractAddress, tokenAbi, signer);
-        const amount = ethers.utils.parseUnits("1", 18); // 1 RIDCOIN с 18 знаками после запятой
-        const tx = await contract.transfer(userAddress, amount);
-        await tx.wait();
-        alert("1 RIDCOIN успешно отправлен на ваш кошелек!");
-      } catch (error) {
-        console.error(error);
-        alert("Ошибка отправки RIDCOIN: " + error.message);
-      }
+        if (!contract || !userAddress) {
+            alert("Кошелек не подключен");
+            return;
+        }
+        try {
+            const tx = await contract.transfer(userAddress, ethers.utils.parseUnits("1", 18));
+            await tx.wait();
+            alert("Успешная отправка 1 RIDCOIN!");
+        } catch (error) {
+            alert("Ошибка отправки RIDCOIN: " + error.message);
+        }
     }
-  </script>
+</script>
+
 </body>
 </html>
