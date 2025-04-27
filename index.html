@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Игра на RIDCOIN</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
   <style>
     body {
       margin: 0;
@@ -33,13 +33,22 @@
       height: calc(100vh - 350px);
       overflow: hidden;
     }
-    .coin {
+    .coin, .bonusCoin {
       position: absolute;
+      cursor: pointer;
+      background-size: cover;
+    }
+    .coin {
       width: 80px;
       height: 80px;
       background-image: url('RIDCOIN.png');
-      background-size: cover;
-      cursor: pointer;
+    }
+    .bonusCoin {
+      width: 120px;
+      height: 120px;
+      background-image: url('RIDCOIN.png');
+      border: 2px solid gold;
+      border-radius: 50%;
     }
     button {
       margin: 8px;
@@ -68,16 +77,16 @@
 <body>
 
 <h1>Лови RIDCOIN!</h1>
-<div id="instruction">Поймай 1 монету и получи 1 RIDCOIN!</div>
-<div id="instruction2">RIDCOIN можно вывести сразу после получения!</div>
+<div id="instruction">Собери 10 монет и получи 1 RIDCOIN!</div>
+<div id="instruction2">Собери 1 RIDCOIN и выведи на свой кошелек!</div>
 <div id="score">Очки: 0</div>
 <div id="ridcoinBalance">RIDCOIN: 0</div>
 
-<button id="connectWalletButton" onclick="connectWallet()">Подключить кошелек</button>
+<button id="connectWalletButton" onclick="connectWallet()">Подключить кошелёк</button>
 <p id="walletAddress"></p>
 
-<button id="withdrawButton" onclick="withdraw()">Получить 1 RIDCOIN</button>
-<button id="walletButton" onclick="sendToWallet()">Вывести на кошелек</button>
+<button id="withdrawButton" onclick="withdraw()">Обменять 10 очков на 1 RIDCOIN</button>
+<button id="walletButton" onclick="sendToWallet()">Вывести на кошелёк</button>
 
 <div id="gameArea"></div>
 
@@ -93,8 +102,10 @@
   let provider;
   let signer;
   let userAddress;
-  const tokenAddress = "0xcD36914FD4C560D1475088eB84bB82C11f3E19DE"; // Адрес RIDCOIN
-  const tokenABI = ["function transfer(address to, uint amount) public returns (bool)"];
+  const tokenAddress = "0xcD36914FD4C560D1475088eB84bB82C11f3E19DE"; // Адрес контракта RIDCOIN
+  const tokenABI = [
+    "function transfer(address to, uint amount) public returns (bool)"
+  ];
 
   async function connectWallet() {
     if (window.ethereum) {
@@ -102,10 +113,26 @@
       await provider.send("eth_requestAccounts", []);
       signer = provider.getSigner();
       userAddress = await signer.getAddress();
+
+      // Проверка сети
+      const { chainId } = await provider.getNetwork();
+      if (chainId !== 137) { // 137 = Polygon Mainnet
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x89' }], // 137 в HEX
+          });
+        } catch (switchError) {
+          if (switchError.code === 4902) {
+            alert('Добавьте сеть Polygon вручную в кошельке!');
+          }
+        }
+      }
+
       document.getElementById('walletAddress').innerText = "Кошелек: " + userAddress;
-      alert('Кошелек подключён!');
+      alert('Кошелек подключён к Polygon!');
     } else {
-      alert('Установите Trust Wallet или откройте через DApp-браузер!');
+      alert('Установите Trust Wallet или используйте Web3-браузер!');
     }
   }
 
@@ -120,16 +147,16 @@
       try {
         const tx = await contract.transfer(userAddress, amount);
         await tx.wait();
-        alert('1 RIDCOIN отправлен на ваш кошелек!');
+        alert('RIDCOIN успешно отправлен на ваш кошелек!');
         ridcoinBalance = 0;
         updateScore();
         walletButton.style.display = 'none';
       } catch (error) {
         console.error(error);
-        alert('Ошибка отправки: ' + error.message);
+        alert('Ошибка при отправке: ' + error.message);
       }
     } else {
-      alert('Сначала заработайте RIDCOIN!');
+      alert('Недостаточно RIDCOIN для вывода!');
     }
   }
 
@@ -140,7 +167,7 @@
     coin.style.top = '-80px';
     gameArea.appendChild(coin);
 
-    let fallSpeed = 3 + Math.random() * 2;
+    let fallSpeed = 2 + Math.random() * 3;
 
     function fall() {
       const currentTop = parseFloat(coin.style.top);
@@ -156,7 +183,38 @@
       score++;
       updateScore();
       coin.remove();
-      if (score >= 1) {
+      if (score >= 10) {
+        withdrawButton.style.display = 'inline-block';
+      }
+    });
+
+    fall();
+  }
+
+  function createBonusCoin() {
+    const bonusCoin = document.createElement('div');
+    bonusCoin.classList.add('bonusCoin');
+    bonusCoin.style.left = Math.random() * (window.innerWidth - 120) + 'px';
+    bonusCoin.style.top = '-120px';
+    gameArea.appendChild(bonusCoin);
+
+    let fallSpeed = 3;
+
+    function fall() {
+      const currentTop = parseFloat(bonusCoin.style.top);
+      if (currentTop < window.innerHeight) {
+        bonusCoin.style.top = currentTop + fallSpeed + 'px';
+        requestAnimationFrame(fall);
+      } else {
+        bonusCoin.remove();
+      }
+    }
+
+    bonusCoin.addEventListener('click', () => {
+      score += 5;
+      updateScore();
+      bonusCoin.remove();
+      if (score >= 10) {
         withdrawButton.style.display = 'inline-block';
       }
     });
@@ -173,16 +231,25 @@
   }
 
   function withdraw() {
-    if (score >= 1) {
-      score -= 1;
+    if (score >= 10) {
+      score -= 10;
       ridcoinBalance += 1;
       updateScore();
-      withdrawButton.style.display = 'none';
-      alert('Вы заработали 1 RIDCOIN!');
+      if (score < 10) {
+        withdrawButton.style.display = 'none';
+      }
+      alert('Поздравляем! Вы получили 1 RIDCOIN!');
     }
   }
 
-  setInterval(createCoin, 1000);
+  setInterval(() => {
+    if (Math.random() < 0.2) {
+      createBonusCoin();
+    } else {
+      createCoin();
+    }
+  }, 1000);
+
 </script>
 
 </body>
