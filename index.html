@@ -3,87 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RIDCOIN - Игровой токен на блокчейне Polygon</title>
-</head>
-<body style="font-family: Arial, sans-serif; text-align: center; margin-top: 50px;">
-
-  <h1>RIDCOIN</h1>
-  <img src="RIDCOIN.png" alt="RIDCOIN Logo" style="width:200px;height:auto;margin-top:20px;">
-  
-  <p>Игровой токен на блокчейне Polygon для цифровых экономик, игр и NFT!</p>
-  
-  <h2>Адрес контракта:</h2>
-  <p style="word-break: break-word;">0xcD36914FD4C560D1475088eB84bB82C11f3E19DE</p>
-
-</body>
-</html><!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <title>RIDCOIN — Игровой токен на Polygon</title>
-
-  <meta name="description" content="RIDCOIN — криптовалюта для игр и обмена на блокчейне Polygon. Покупай, обменивай и используй в своих проектах!">
-  <meta name="keywords" content="RIDCOIN, криптовалюта, токен, Polygon, блокчейн, RID, game coin">
-  <meta name="robots" content="index, follow">
-
-  <!-- Иконка сайта -->
-  <link rel="icon" type="image/png" href="favicon.png">
-
+  <title>RIDCOIN</title>
   <style>
     body {
+      background-color: #121212;
+      color: #ccc;
       font-family: 'Arial', sans-serif;
-      background: linear-gradient(to right, #0d1117, #161b22);
-      color: #c9d1d9;
-      margin: 0;
-      padding: 20px;
       text-align: center;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      justify-content: center;
+      margin: 0;
+      padding: 0;
+      animation: fadeIn 2s ease-in-out;
     }
     h1 {
-      font-size: 8vw;
-      color: #58a6ff;
-      margin-bottom: 10px;
+      color: #4DA6FF;
+      margin-top: 30px;
+      font-size: 48px;
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+    img {
+      margin-top: 20px;
+      width: 150px;
+      height: auto;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #4DA6FF;
+      opacity: 0;
+      animation: appear 2s forwards;
     }
     p {
-      font-size: 4.5vw;
-      margin-top: 10px;
+      margin-top: 20px;
+      font-size: 20px;
       max-width: 90%;
       margin-left: auto;
       margin-right: auto;
+      line-height: 1.5;
     }
-    a.button {
+    .address {
+      font-weight: bold;
+      color: #ffffff;
+      margin-top: 10px;
+    }
+    .buy-button {
       display: inline-block;
       margin-top: 30px;
       padding: 15px 30px;
-      font-size: 5vw;
-      color: white;
-      background: #238636;
-      border-radius: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #ffffff;
+      background: linear-gradient(45deg, #4DA6FF, #1E90FF);
+      border: none;
+      border-radius: 30px;
       text-decoration: none;
-      transition: background 0.3s;
+      box-shadow: 0 0 15px #4DA6FF;
+      transition: 0.3s ease;
+      animation: appear 3s forwards;
     }
-    a.button:hover {
-      background: #2ea043;
+    .buy-button:hover {
+      background: linear-gradient(45deg, #1E90FF, #4DA6FF);
+      box-shadow: 0 0 25px #4DA6FF;
+      transform: scale(1.05);
     }
-    .contract {
-      margin-top: 30px;
-      font-size: 4vw;
-      color: #8b949e;
-      word-break: break-word;
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 5px #4DA6FF, 0 0 10px #4DA6FF;
+      }
+      to {
+        text-shadow: 0 0 20px #4DA6FF, 0 0 30px #4DA6FF;
+      }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes appear {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
-
 </head>
 <body>
-
   <h1>RIDCOIN</h1>
+  <img src="RIDCOIN.png" alt="RIDCOIN Logo">
   <p>Игровой токен на блокчейне Polygon для цифровых экономик, игр и NFT!</p>
-
-  <div class="contract">
-    <strong>Адрес контракта:</strong><br>
+  <div class="address">
+    Адрес контракта:<br>
     0xcD36914FD4C560D1475088eB84bB82C11f3E19DE
+  </div>
+
+  <a href="#" class="buy-button">Купить RIDCOIN</a>
+</body>
+</html>
