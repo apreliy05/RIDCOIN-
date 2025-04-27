@@ -109,14 +109,19 @@
 
   async function connectWallet() {
     if (window.ethereum) {
-      provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = provider.getSigner();
-      userAddress = await signer.getAddress();
-      document.getElementById('walletAddress').innerText = "Кошелек: " + userAddress;
-      alert('Кошелек подключён через браузер Trust Wallet!');
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        userAddress = accounts[0];
+        provider = new ethers.providers.Web3Provider(window.ethereum);
+        signer = provider.getSigner();
+        document.getElementById('walletAddress').innerText = "Кошелек: " + userAddress;
+        alert('Кошелек подключён через Trust Wallet!');
+      } catch (error) {
+        console.error(error);
+        alert('Ошибка подключения кошелька: ' + error.message);
+      }
     } else {
-      alert('Пожалуйста, откройте через встроенный браузер Trust Wallet!');
+      alert('Пожалуйста, откройте сайт через встроенный браузер Trust Wallet!');
     }
   }
 
@@ -131,7 +136,7 @@
       try {
         const tx = await contract.transfer(userAddress, amount);
         await tx.wait();
-        alert('RIDCOIN успешно отправлены на ваш кошелек!');
+        alert('RIDCOIN успешно отправлен на ваш кошелек!');
         ridcoinBalance = 0;
         updateScore();
         walletButton.style.display = 'none';
