@@ -1,18 +1,236 @@
-// Макет магазина RID в игре на JavaScript
+<!DOCTYPE html><html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Игра на RIDCOIN</title>
+  <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #121212;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      overflow: hidden;
+    }
+    h1 {
+      margin-top: 20px;
+      color: #4DA6FF;
+    }
+    #instruction, #instruction2 {
+      font-size: 20px;
+      margin: 10px;
+      color: #FFD700;
+    }
+    #score, #ridcoinBalance {
+      font-size: 24px;
+      margin: 10px;
+    }
+    #gameArea {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 350px);
+      overflow: hidden;
+    }
+    .coin, .bonusCoin {
+      position: absolute;
+      cursor: pointer;
+      background-size: cover;
+    }
+    .coin {
+      width: 80px;
+      height: 80px;
+      background-image: url('RIDCOIN.png');
+    }
+    .bonusCoin {
+      width: 120px;
+      height: 120px;
+      background-image: url('RIDCOIN.png');
+      border: 2px solid gold;
+      border-radius: 50%;
+    }
+    button {
+      margin: 8px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #withdrawButton, #walletButton {
+      display: none;
+    }
+    #walletAddress {
+      margin: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+  </style>
+</head>
+<body><h1>Лови RIDCOIN!</h1>
+<div id="instruction">Собери 10 монет и получи 1 RIDCOIN!</div>
+<div id="instruction2">Квест: собери 20 монет за 60 секунд и получи 5 RIDCOIN!</div>
+<div id="score">Очки: 0</div>
+<div id="ridcoinBalance">RIDCOIN: 0</div><button id="connectWalletButton" onclick="connectWallet()">Подключить кошелёк</button>
 
-const storeItems = [ { id: 1, name: "Сахар (10 г)", priceRID: 1, action: () => giveSugar(10), }, { id: 2, name: "Улей", priceRID: 100, action: () => addHive(), }, { id: 3, name: "Домик", priceRID: 500, action: () => addHouse(), }, { id: 4, name: "Королева пчёл", priceRID: 2000, action: () => summonQueen(), }, ];
+<p id="walletAddress"></p><button id="withdrawButton" onclick="withdraw()">Обменять 10 очков на 1 RIDCOIN</button> <button id="walletButton" onclick="sendToWallet()">Вывести на кошелёк</button>
 
-let userRIDBalance = 0; // Будет обновляться из кошелька
+<div id="questStatus"></div>
+<button onclick="startQuest()">Начать квест</button><div id="gameArea"></div><script>
+  let score = 0;
+  let ridcoinBalance = 0;
+  let questInProgress = false;
+  let questTimer;
+  let questCoinsCollected = 0;
 
-function renderStore() { const store = document.getElementById("store"); store.innerHTML = ""; storeItems.forEach(item => { const itemDiv = document.createElement("div"); itemDiv.className = "store-item"; itemDiv.innerHTML = <h3>${item.name}</h3> <p>Цена: ${item.priceRID} RID</p> <button onclick="buyItem(${item.id})">Купить</button>; store.appendChild(itemDiv); }); }
+  const scoreDisplay = document.getElementById('score');
+  const ridcoinDisplay = document.getElementById('ridcoinBalance');
+  const withdrawButton = document.getElementById('withdrawButton');
+  const walletButton = document.getElementById('walletButton');
+  const questStatus = document.getElementById('questStatus');
 
-function buyItem(id) { const item = storeItems.find(i => i.id === id); if (!item) return alert("Товар не найден"); if (userRIDBalance < item.priceRID) return alert("Недостаточно RID");
+  const gameArea = document.getElementById('gameArea');
 
-userRIDBalance -= item.priceRID; item.action(); alert(Покупка успешна: ${item.name}); }
+  let provider, signer, userAddress;
+  const tokenAddress = "0xcD36914FD4C560D1475088eB84bB82C11f3E19DE";
+  const tokenABI = ["function transfer(address to, uint amount) public returns (bool)"];
 
-function updateRIDBalance(balance) { userRIDBalance = balance; document.getElementById("rid-balance").innerText = RID: ${userRIDBalance}; }
+  async function connectWallet() {
+    if (window.ethereum) {
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = provider.getSigner();
+      userAddress = await signer.getAddress();
+      document.getElementById('walletAddress').innerText = "Кошелек: " + userAddress;
+      alert('Кошелек подключён!');
+    } else {
+      alert('Установите Trust Wallet или откройте через Web3-браузер!');
+    }
+  }
 
-// Пример функций действий function giveSugar(amount) { console.log(Добавлено сахара: ${amount} г); } function addHive() { console.log("Добавлен улей"); } function addHouse() { console.log("Добавлен домик"); } function summonQueen() { console.log("Призвана королева пчёл"); }
+  async function sendToWallet() {
+    if (!userAddress) {
+      alert('Сначала подключите кошелек!');
+      return;
+    }
+    if (ridcoinBalance >= 1) {
+      const contract = new ethers.Contract(tokenAddress, tokenABI, signer);
+      const amount = ethers.utils.parseUnits("1", 18);
+      try {
+        const tx = await contract.transfer(userAddress, amount);
+        await tx.wait();
+        alert('RIDCOIN отправлен на ваш кошелек!');
+        ridcoinBalance -= 1;
+        updateScore();
+      } catch (error) {
+        console.error(error);
+        alert('Ошибка: ' + error.message);
+      }
+    } else {
+      alert('Недостаточно RIDCOIN!');
+    }
+  }
 
-// Имитация загрузки магазина window.onload = () => { updateRIDBalance(1500); // Примерно 1500 RID на старте renderStore(); };
+  function updateScore() {
+    scoreDisplay.textContent = 'Очки: ' + score;
+    ridcoinDisplay.textContent = 'RIDCOIN: ' + ridcoinBalance;
+    if (score >= 10) withdrawButton.style.display = 'inline-block';
+    if (ridcoinBalance >= 1) walletButton.style.display = 'inline-block';
+  }
 
+  function withdraw() {
+    if (score >= 10) {
+      score -= 10;
+      ridcoinBalance += 1;
+      updateScore();
+      if (score < 10) withdrawButton.style.display = 'none';
+      alert('Вы получили 1 RIDCOIN!');
+    }
+  }
+
+  function startQuest() {
+    if (questInProgress) return;
+    questInProgress = true;
+    questCoinsCollected = 0;
+    questStatus.textContent = 'Квест начался! Собери 20 монет за 60 секунд!';
+    questTimer = setTimeout(() => {
+      questInProgress = false;
+      questStatus.textContent = 'Квест не выполнен. Попробуй снова!';
+    }, 60000);
+  }
+
+  function coinClicked() {
+    score++;
+    if (questInProgress) {
+      questCoinsCollected++;
+      if (questCoinsCollected >= 20) {
+        clearTimeout(questTimer);
+        questInProgress = false;
+        ridcoinBalance += 5;
+        questStatus.textContent = 'Квест выполнен! +5 RIDCOIN!';
+      }
+    }
+    updateScore();
+  }
+
+  function createCoin() {
+    const coin = document.createElement('div');
+    coin.classList.add('coin');
+    coin.style.left = Math.random() * (window.innerWidth - 80) + 'px';
+    coin.style.top = '-80px';
+    gameArea.appendChild(coin);
+
+    let fallSpeed = 2 + Math.random() * 3;
+    function fall() {
+      const currentTop = parseFloat(coin.style.top);
+      if (currentTop < window.innerHeight) {
+        coin.style.top = currentTop + fallSpeed + 'px';
+        requestAnimationFrame(fall);
+      } else coin.remove();
+    }
+
+    coin.addEventListener('click', () => {
+      coinClicked();
+      coin.remove();
+    });
+
+    fall();
+  }
+
+  function createBonusCoin() {
+    const bonusCoin = document.createElement('div');
+    bonusCoin.classList.add('bonusCoin');
+    bonusCoin.style.left = Math.random() * (window.innerWidth - 120) + 'px';
+    bonusCoin.style.top = '-120px';
+    gameArea.appendChild(bonusCoin);
+
+    let fallSpeed = 3;
+    function fall() {
+      const currentTop = parseFloat(bonusCoin.style.top);
+      if (currentTop < window.innerHeight) {
+        bonusCoin.style.top = currentTop + fallSpeed + 'px';
+        requestAnimationFrame(fall);
+      } else bonusCoin.remove();
+    }
+
+    bonusCoin.addEventListener('click', () => {
+      score += 5;
+      if (questInProgress) questCoinsCollected++;
+      updateScore();
+      bonusCoin.remove();
+    });
+
+    fall();
+  }
+
+  setInterval(() => {
+    if (Math.random() < 0.2) createBonusCoin();
+    else createCoin();
+  }, 1000);
+</script></body>
+</html>
