@@ -72,6 +72,10 @@
   <h2>Стратегия</h2>
 
   <div class="stats">
+    <p><strong>Уровень:</strong> <span id="level">1</span></p>
+    <div class="progress-container">
+      <div class="progress-bar" id="xpProgress">0 / 10 XP</div>
+    </div>
     <p><strong>Мёд:</strong> <span id="honey">0</span></p>
     <div class="progress-container">
       <div class="progress-bar" id="honeyProgress">0 / 10</div>
@@ -89,7 +93,7 @@
   <div class="buildings">
     <button onclick="buyBee()">Нанять пчелу (10 RIDCOIN)</button>
     <button onclick="buyHive()">Построить пасеку (50 RIDCOIN)</button>
-    <p class="small">Пчёлы автоматически приносят мёд. Больше пасек = больше пчёл доступно.</p>
+    <p class="small">Пчёлы автоматически приносят мёд. Уровень увеличивает эффективность.</p>
   </div>
 
   <div class="achievements">
@@ -103,6 +107,8 @@
     let bees = parseInt(localStorage.getItem('bees') || '1');
     let hives = parseInt(localStorage.getItem('hives') || '1');
     let totalHoney = parseInt(localStorage.getItem('totalHoney') || '0');
+    let level = parseInt(localStorage.getItem('level') || '1');
+    let xp = parseInt(localStorage.getItem('xp') || '0');
 
     const achievements = [
       { id: 'ridcoin1', text: 'Первый RIDCOIN', condition: () => ridcoin >= 1 },
@@ -111,23 +117,44 @@
       { id: 'honey100', text: 'Медовая капля (100 мёда всего)', condition: () => totalHoney >= 100 },
     ];
 
+    function xpToNextLevel() {
+      return level * 10;
+    }
+
+    function gainXP(amount) {
+      xp += amount;
+      while (xp >= xpToNextLevel()) {
+        xp -= xpToNextLevel();
+        level++;
+        alert(`Поздравляем! Уровень повышен до ${level}. Пчёлы стали работать эффективнее.`);
+      }
+      save();
+    }
+
     function updateUI() {
       document.getElementById('honey').textContent = honey;
       document.getElementById('ridcoin').textContent = ridcoin;
       document.getElementById('bees').textContent = bees;
       document.getElementById('hives').textContent = hives;
+      document.getElementById('level').textContent = level;
 
+      // Honey progress
       let partial = honey % 10;
       let percent = (partial / 10) * 100;
       document.getElementById('honeyProgress').style.width = Math.max(percent, 4) + '%';
       document.getElementById('honeyProgress').textContent = `${partial} / 10`;
 
+      // XP progress
+      let xpPercent = (xp / xpToNextLevel()) * 100;
+      document.getElementById('xpProgress').style.width = Math.max(xpPercent, 4) + '%';
+      document.getElementById('xpProgress').textContent = `${xp} / ${xpToNextLevel()} XP`;
+
       updateAchievements();
     }
 
     function collectHoney() {
-      honey += bees;
-      totalHoney += bees;
+      honey += bees * level;
+      totalHoney += bees * level;
       save();
       updateUI();
     }
@@ -137,6 +164,7 @@
         let coins = Math.floor(honey / 10);
         ridcoin += coins;
         honey -= coins * 10;
+        gainXP(1);
         save();
         updateUI();
       } else {
@@ -148,6 +176,7 @@
       if (ridcoin >= 10 && bees < hives * 5) {
         bees++;
         ridcoin -= 10;
+        gainXP(2);
         save();
         updateUI();
       } else {
@@ -159,6 +188,7 @@
       if (ridcoin >= 50) {
         hives++;
         ridcoin -= 50;
+        gainXP(5);
         save();
         updateUI();
       } else {
@@ -169,7 +199,6 @@
     function updateAchievements() {
       const list = document.getElementById('achievementsList');
       list.innerHTML = '';
-
       achievements.forEach(a => {
         const done = a.condition();
         const div = document.createElement('div');
@@ -185,11 +214,13 @@
       localStorage.setItem('bees', bees);
       localStorage.setItem('hives', hives);
       localStorage.setItem('totalHoney', totalHoney);
+      localStorage.setItem('level', level);
+      localStorage.setItem('xp', xp);
     }
 
     setInterval(() => {
-      honey += bees;
-      totalHoney += bees;
+      honey += bees * level;
+      totalHoney += bees * level;
       save();
       updateUI();
     }, 3000);
