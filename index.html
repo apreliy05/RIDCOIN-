@@ -65,6 +65,18 @@
       border-left-color: green;
       background: #e0ffe0;
     }
+    #eventMessage {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffeb3b;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #999;
+      display: none;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
@@ -101,6 +113,8 @@
     <div id="achievementsList"></div>
   </div>
 
+  <div id="eventMessage"></div>
+
   <script>
     let honey = parseInt(localStorage.getItem('honey') || '0');
     let ridcoin = parseInt(localStorage.getItem('ridcoin') || '0');
@@ -109,6 +123,7 @@
     let totalHoney = parseInt(localStorage.getItem('totalHoney') || '0');
     let level = parseInt(localStorage.getItem('level') || '1');
     let xp = parseInt(localStorage.getItem('xp') || '0');
+    let goldenBeeBonus = parseInt(localStorage.getItem('goldenBeeBonus') || '0');
 
     const achievements = [
       { id: 'ridcoin1', text: 'Первый RIDCOIN', condition: () => ridcoin >= 1 },
@@ -153,8 +168,9 @@
     }
 
     function collectHoney() {
-      honey += bees * level;
-      totalHoney += bees * level;
+      let efficiency = level + goldenBeeBonus;
+      honey += bees * efficiency;
+      totalHoney += bees * efficiency;
       save();
       updateUI();
     }
@@ -216,16 +232,19 @@
       localStorage.setItem('totalHoney', totalHoney);
       localStorage.setItem('level', level);
       localStorage.setItem('xp', xp);
+      localStorage.setItem('goldenBeeBonus', goldenBeeBonus);
     }
 
-    setInterval(() => {
-      honey += bees * level;
-      totalHoney += bees * level;
-      save();
-      updateUI();
-    }, 3000);
+    function showEventMessage(message) {
+      const eventDiv = document.getElementById('eventMessage');
+      eventDiv.textContent = message;
+      eventDiv.style.display = 'block';
+      setTimeout(() => {
+        eventDiv.style.display = 'none';
+      }, 5000);
+    }
 
-    updateUI();
-  </script>
-</body>
-</html>
+    function triggerRandomEvent() {
+      const events = [
+        { type: 'positive', message: 'Вы нашли заброшенный улей! +10 RIDCOIN', action: () => { ridcoin += 10; } },
+        { type: 'positive', message: 'Пчёлы нашли цветущий луг! +50 мёда', action:0
