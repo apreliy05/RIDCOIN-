@@ -38,6 +38,24 @@
       font-size: 14px;
       color: #777;
     }
+    .progress-container {
+      background: #eee;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 25px;
+      margin-top: 5px;
+    }
+    .progress-bar {
+      background: #4caf50;
+      height: 100%;
+      width: 0%;
+      min-width: 4%;
+      transition: width 0.3s;
+      text-align: center;
+      color: white;
+      line-height: 25px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -46,6 +64,9 @@
 
   <div class="stats">
     <p><strong>Мёд:</strong> <span id="honey">0</span></p>
+    <div class="progress-container">
+      <div class="progress-bar" id="honeyProgress">0 / 10</div>
+    </div>
     <p><strong>RIDCOIN:</strong> <span id="ridcoin">0</span></p>
     <p><strong>Пасеки:</strong> <span id="hives">1</span></p>
     <p><strong>Пчёлы:</strong> <span id="bees">1</span></p>
@@ -73,6 +94,11 @@
       document.getElementById('ridcoin').textContent = ridcoin;
       document.getElementById('bees').textContent = bees;
       document.getElementById('hives').textContent = hives;
+
+      let partial = honey % 10;
+      let percent = (partial / 10) * 100;
+      document.getElementById('honeyProgress').style.width = Math.max(percent, 4) + '%';
+      document.getElementById('honeyProgress').textContent = `${partial} / 10`;
     }
 
     function collectHoney() {
@@ -122,7 +148,6 @@
       localStorage.setItem('hives', hives);
     }
 
-    // Автоматический сбор мёда каждые 3 секунды
     setInterval(() => {
       honey += bees;
       save();
