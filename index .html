@@ -1,51 +1,154 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>RIDCOIN - Игровой токен на блокчейне Polygon</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RIDCOIN Пчеловод: Стратегия</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
-      color: white;
       margin: 0;
-      padding: 20px;
+      font-family: sans-serif;
+      background: #fdf6e3;
+      color: #333;
+      padding: 10px;
     }
-    img {
-      margin-top: 20px;
-      width: 200px;
-      height: auto;
+    h1, h2 {
+      text-align: center;
     }
-    .button {
-      margin-top: 30px;
-      padding: 15px 30px;
-      background-color: #ff9800;
-      color: black;
-      font-size: 18px;
-      text-decoration: none;
+    .stats, .actions, .buildings {
+      margin: 15px 0;
+      padding: 10px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    button {
+      padding: 10px;
+      margin: 5px 0;
+      width: 100%;
+      font-size: 16px;
+      border: none;
       border-radius: 8px;
-      display: inline-block;
-      transition: background-color 0.3s;
+      background-color: #ffca28;
     }
-    .button:hover {
+    button:hover {
       background-color: #ffc107;
+    }
+    .small {
+      font-size: 14px;
+      color: #777;
+    }
+    .progress-container {
+      background: #eee;
+      border-radius: 8px;
+      overflow: hidden;
+      height: 20px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      background: #4caf50;
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s;
     }
   </style>
 </head>
 <body>
+  <h1>RIDCOIN Пчеловод</h1>
+  <h2>Стратегия</h2>
 
-  <h1>RIDCOIN</h1>
-  
-  <img src="RIDCOIN.png" alt="RIDCOIN Logo">
-  
-  <p style="margin-top: 20px;">Игровой токен на блокчейне Polygon для цифровых экономик, игр и NFT!</p>
-  
-  <h2>Адрес контракта:</h2>
-  <p style="word-break: break-word;">0xcD36914FD4C560D1475088eB84bB82C11f3E19DE</p>
+  <div class="stats">
+    <p><strong>Мёд:</strong> <span id="honey">0</span></p>
+    <div class="progress-container">
+      <div class="progress-bar" id="honeyProgress"></div>
+    </div>
+    <p><strong>RIDCOIN:</strong> <span id="ridcoin">0</span></p>
+    <p><strong>Пасеки:</strong> <span id="hives">1</span></p>
+    <p><strong>Пчёлы:</strong> <span id="bees">1</span></p>
+  </div>
 
-  <a href="https://polygonscan.com/address/0xcD36914FD4C560D1475088eB84bB82C11f3E19DE" target="_blank" class="button">Посмотреть контракт</a>
+  <div class="actions">
+    <button onclick="collectHoney()">Собрать мёд вручную</button>
+    <button onclick="sellHoney()">Продать мёд за RIDCOIN</button>
+  </div>
 
+  <div class="buildings">
+    <button onclick="buyBee()">Нанять пчелу (10 RIDCOIN)</button>
+    <button onclick="buyHive()">Построить пасеку (50 RIDCOIN)</button>
+    <p class="small">Пчёлы автоматически приносят мёд. Больше пасек = больше пчёл доступно.</p>
+  </div>
+
+  <script>
+    let honey = parseInt(localStorage.getItem('honey') || '0');
+    let ridcoin = parseInt(localStorage.getItem('ridcoin') || '0');
+    let bees = parseInt(localStorage.getItem('bees') || '1');
+    let hives = parseInt(localStorage.getItem('hives') || '1');
+
+    function updateUI() {
+      document.getElementById('honey').textContent = honey;
+      document.getElementById('ridcoin').textContent = ridcoin;
+      document.getElementById('bees').textContent = bees;
+      document.getElementById('hives').textContent = hives;
+
+      // Прогрессбар: показывает % до следующего RIDCOIN
+      let progress = (honey % 10) * 10;
+      document.getElementById('honeyProgress').style.width = progress + '%';
+    }
+
+    function collectHoney() {
+      honey += bees;
+      save();
+      updateUI();
+    }
+
+    function sellHoney() {
+      if (honey >= 10) {
+        let coins = Math.floor(honey / 10);
+        ridcoin += coins;
+        honey -= coins * 10;
+        save();
+        updateUI();
+      } else {
+        alert("Нужно хотя бы 10 мёда, чтобы обменять на RIDCOIN.");
+      }
+    }
+
+    function buyBee() {
+      if (ridcoin >= 10 && bees < hives * 5) {
+        bees++;
+        ridcoin -= 10;
+        save();
+        updateUI();
+      } else {
+        alert("Нужно 10 RIDCOIN и достаточно пасек.");
+      }
+    }
+
+    function buyHive() {
+      if (ridcoin >= 50) {
+        hives++;
+        ridcoin -= 50;
+        save();
+        updateUI();
+      } else {
+        alert("Нужно 50 RIDCOIN.");
+      }
+    }
+
+    function save() {
+      localStorage.setItem('honey', honey);
+      localStorage.setItem('ridcoin', ridcoin);
+      localStorage.setItem('bees', bees);
+      localStorage.setItem('hives', hives);
+    }
+
+    setInterval(() => {
+      honey += bees;
+      save();
+      updateUI();
+    }, 3000);
+
+    updateUI();
+  </script>
 </body>
 </html>
