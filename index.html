@@ -15,7 +15,7 @@
     h1, h2 {
       text-align: center;
     }
-    .stats, .actions, .buildings {
+    .stats, .actions, .buildings, .achievements {
       margin: 15px 0;
       padding: 10px;
       background: #fff;
@@ -56,6 +56,15 @@
       line-height: 25px;
       font-weight: bold;
     }
+    .achievement {
+      padding: 5px;
+      margin: 3px 0;
+      border-left: 5px solid #ccc;
+    }
+    .achievement.completed {
+      border-left-color: green;
+      background: #e0ffe0;
+    }
   </style>
 </head>
 <body>
@@ -83,11 +92,24 @@
     <p class="small">Пчёлы автоматически приносят мёд. Больше пасек = больше пчёл доступно.</p>
   </div>
 
+  <div class="achievements">
+    <h3>Достижения</h3>
+    <div id="achievementsList"></div>
+  </div>
+
   <script>
     let honey = parseInt(localStorage.getItem('honey') || '0');
     let ridcoin = parseInt(localStorage.getItem('ridcoin') || '0');
     let bees = parseInt(localStorage.getItem('bees') || '1');
     let hives = parseInt(localStorage.getItem('hives') || '1');
+    let totalHoney = parseInt(localStorage.getItem('totalHoney') || '0');
+
+    const achievements = [
+      { id: 'ridcoin1', text: 'Первый RIDCOIN', condition: () => ridcoin >= 1 },
+      { id: 'bees5', text: 'Пчеловод (5 пчёл)', condition: () => bees >= 5 },
+      { id: 'hives3', text: 'Король пасеки (3 пасеки)', condition: () => hives >= 3 },
+      { id: 'honey100', text: 'Медовая капля (100 мёда всего)', condition: () => totalHoney >= 100 },
+    ];
 
     function updateUI() {
       document.getElementById('honey').textContent = honey;
@@ -99,10 +121,13 @@
       let percent = (partial / 10) * 100;
       document.getElementById('honeyProgress').style.width = Math.max(percent, 4) + '%';
       document.getElementById('honeyProgress').textContent = `${partial} / 10`;
+
+      updateAchievements();
     }
 
     function collectHoney() {
       honey += bees;
+      totalHoney += bees;
       save();
       updateUI();
     }
@@ -141,15 +166,30 @@
       }
     }
 
+    function updateAchievements() {
+      const list = document.getElementById('achievementsList');
+      list.innerHTML = '';
+
+      achievements.forEach(a => {
+        const done = a.condition();
+        const div = document.createElement('div');
+        div.className = 'achievement' + (done ? ' completed' : '');
+        div.textContent = (done ? '✔ ' : '⏳ ') + a.text;
+        list.appendChild(div);
+      });
+    }
+
     function save() {
       localStorage.setItem('honey', honey);
       localStorage.setItem('ridcoin', ridcoin);
       localStorage.setItem('bees', bees);
       localStorage.setItem('hives', hives);
+      localStorage.setItem('totalHoney', totalHoney);
     }
 
     setInterval(() => {
       honey += bees;
+      totalHoney += bees;
       save();
       updateUI();
     }, 3000);
