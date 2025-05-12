@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ОСОФЕРМ: Игра-ферма</title>
+    <title>ОСОФЕРМ</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -141,7 +141,7 @@
     
     <div id="game-container">
         <h1>🌱 ОСОФЕРМ</h1>
-        <p>Соберите больше 2т, чтобы получить награду!</p>
+        <p>Соберите больше 27 единиц урожая, чтобы получить награду!</p>
         
         <div class="stats">
             <div class="stat">
@@ -150,7 +150,7 @@
             </div>
             <div class="stat">
                 <div>🌱 Урожай</div>
-                <div id="harvest">0 г</div>
+                <div id="harvest">0</div>
             </div>
             <div class="stat">
                 <div>⏱️ Восстановление</div>
@@ -180,7 +180,8 @@
                 { name: "Росток", img: "🌿", growth: 0.3 },
                 { name: "Растение", img: "🌾", growth: 0.7 },
                 { name: "Урожай", img: "🍅", growth: 1 }
-            ]
+            ],
+            targetHarvest: 27 // Цель - собрать 27 единиц
         };
 
         // Элементы интерфейса
@@ -247,17 +248,17 @@
         // Собрать урожай
         function harvestPlant(index) {
             const plant = game.plants[index];
-            const harvestAmount = 300 + Math.floor(Math.random() * 200); // 300-500г
+            const harvestAmount = 1; // 1 единица урожая с растения
             game.harvest += harvestAmount;
             plant.stage = -1;
             plant.progress = 0;
             updatePlant(index);
             updateHarvest();
-            showMessage(`Собрано ${harvestAmount}г урожая!`);
+            showMessage(`Собрано +1 урожая! Всего: ${game.harvest}/${game.targetHarvest}`);
             
             // Проверка победы
-            if (game.harvest >= 2000) {
-                showMessage("🎉 Поздравляем! Вы собрали 2т урожая и выиграли!");
+            if (game.harvest >= game.targetHarvest) {
+                showMessage(`🎉 Поздравляем! Вы собрали ${game.targetHarvest} единиц урожая и выиграли!`);
                 confettiEffect();
             }
         }
@@ -286,7 +287,7 @@
 
         // Обновить счетчик урожая
         function updateHarvest() {
-            harvestEl.textContent = `${game.harvest} г`;
+            harvestEl.textContent = `${game.harvest}`;
         }
 
         // Показать сообщение
