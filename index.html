@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>УЛЁТНЫЙ КЛИКЕР!</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            overflow: hidden;
+            user-select: none;
+        }
+        .game-container {
+            text-align: center;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #00ffff, 0 0 20px #0080ff;
+        }
+        .info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        #game-area {
+            width: 100%;
+            height: 60vh;
+            margin: 20px auto;
+            position: relative;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+        .ball {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.1s;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        }
+        .ball:active {
+            transform: scale(0.9);
+        }
+        .bonus {
+            animation: glow 1s infinite alternate;
+        }
+        @keyframes glow {
+            from { box-shadow: 0 0 10px #ff0, 0 0 20px #ff0; }
+            to { box-shadow: 0 0 20px #ff0, 0 0 30px #ff0; }
+        }
+        #start-btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background: linear-gradient(45deg, #00ff88, #0088ff);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+        }
+        #start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 255, 255, 0.6);
+        }
+        .explosion {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            animation: explode 0.5s forwards;
+        }
+        @keyframes explode {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🚀 УЛЁТНЫЙ КЛИКЕР!</h1>
+        <div class="info">
+            <p>Очки: <span id="score">0</span></p>
+            <p>Время: <span id="time">30</span> сек</p>
+        </div>
+        <button id="start-btn">СТАРТ!</button>
+        <div id="game-area"></div>
+    </div>
+
+    <audio id="clickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3" preload="auto"></audio>
+    <audio id="bonusSound" src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3" preload="auto"></audio>
+
+    <script>
+        const gameArea = document.getElementById('game-area');
+        const startBtn = document.getElementById('start-btn');
+        const scoreDisplay = document.getElementById('score');
+        const timeDisplay = document.getElementById('time');
+        const clickSound = document.getElementById('clickSound');
+        const bonusSound = document.getElementById('bonusSound');
+
+        let score = 0;
+        let timeLeft = 30;
+        let gameInterval;
+        let timerInterval;
+        let balls = [];
+
+        // Создаем шарик
+        function createBall() {
+            const ball = document.createElement('div');
+            ball.className = 'ball';
+            
+            // Рандомные параметры
+            const size = Math.floor(Math.random() * 30) + 20;
+            const colors = ['#ff3366', '#33ff66', '#3366ff', '#ff33ff', '#ffff33'];
+            const isBonus = Math.random() < 0.1; // 10% шанс бонуса
+            
+            if (isBonus) {
+                ball.classList.add('bonus');
+                ball.dataset.bonus = "true";
+            }
+            
+            ball.style.width = `${size}px`;
+            ball.style.height = `${size}px`;
+            ball.style.backgroundColor = isBonus ? '#ffff00' : colors[Math.floor(Math.random() * colors.length)];
+            
+            // Начальная позиция (чтобы не вылетал за границы)
+            const maxX = gameArea.offsetWidth - size;
+            const maxY = gameArea.offsetHeight - size;
+            const x = Math.random() * maxX;
+            const y = Math.random() * maxY;
+            
+            ball.style.left = `${x}px`;
+            ball.style.top = `${y}px`;
+            
+            // Скорость движения
+            const speedX = (Math.random() - 0.5) * 5;
+            const speedY = (Math.random() - 0.5) * 5;
+            
+            // Клик по шарику
+            ball.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                if (ball.dataset.bonus === "true") {
+                    score += 5;
+                    bonusSound.currentTime = 0;
+                    bonusSound.play();
+                } else {
+                    score += 1;
+                    clickSound.currentTime = 0;
+                    clickSound.play();
+                }
+                
+                scoreDisplay.textContent = score;
+                
+                // Эффект взрыва
+                const explosion = document.createElement('div');
+                explosion.className = 'explosion';
+                explosion.style.left = `${parseInt(ball.style.left) + size/2 - 25}px`;
+                explosion.style.top = `${parseInt(ball.style.top) + size/2 - 25}px`;
+                gameArea.appendChild(explosion);
+                
+                setTimeout(() => {
+                    explosion.remove();
+                }, 500);
+                
+                ball.remove();
+                balls = balls.filter(b => b.element !== ball);
+            });
+            
+            gameArea.appendChild(ball);
+            
+            // Сохраняем шарик для движения
+            balls.push({
+                element: ball,
+                x: x,
+                y: y,
+                speedX: speedX,
+                speedY: speedY,
+                size: size
+            });
+        }
+
+        // Движение шариков
+        function moveBalls() {
+            balls.forEach(ball => {
+                ball.x += ball.speedX;
+                ball.y += ball.speedY;
+                
+                // Отскок от стен
+                if (ball.x <= 0 || ball.x >= gameArea.offsetWidth - ball.size) {
+                    ball.speedX *= -1;
+                }
+                if (ball.y <= 0 || ball.y >= gameArea.offsetHeight - ball.size) {
+                    ball.speedY *= -1;
+                }
+                
+                ball.element.style.left = `${ball.x}px`;
+                ball.element.style.top = `${ball.y}px`;
+            });
+        }
+
+        // Старт игры
+        function startGame() {
+            score = 0;
+            timeLeft = 30;
+            scoreDisplay.textContent = score;
+            timeDisplay.textContent = timeLeft;
+            gameArea.innerHTML = '';
+            balls = [];
+            startBtn.disabled = true;
+            
+            // Создаем шарики каждые 0.5 секунды
+            gameInterval = setInterval(createBall, 500);
+            
+            // Движение шариков (60 FPS)
+            const moveInterval = setInterval(moveBalls, 1000/60);
+            
+            // Таймер
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timeDisplay.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(moveInterval);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        // Конец игры
+        function endGame() {
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            startBtn.disabled = false;
+            
+            // Финальное сообщение с эмоцией
+            let message;
+            if (score < 20) message = "Неплохо, но можно лучше! 😊";
+            else if (score < 50) message = "Хороший результат! 👍";
+            else message = "Ты просто монстр! 🤯";
+            
+            alert(`Игра окончена!\n${message}\nТвой счет: ${score}`);
+        }
+
+        startBtn.addEventListener('click', startGame);
+        
+        // Клик мимо шарика — штраф
+        gameArea.addEventListener('click', () => {
+            if (timeLeft < 30 && timeLeft > 0) {
+                score = Math.max(0, score - 1);
+                scoreDisplay.textContent = score;
+            }
+        });
+    </script>
+</body>
+</html>
