@@ -3,21 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Уклоняйся от блоков!</title>
+  <title>Лови монету</title>
   <style>
     body {
       margin: 0;
-      background: #222;
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      height: 100vh;
+    }
+
+    h1 {
+      margin-top: 10px;
+    }
+
+    #score {
+      font-size: 20px;
+      margin-bottom: 10px;
     }
 
     #gameArea {
       width: 600px;
       height: 400px;
-      background: #444;
+      background: #333;
       position: relative;
       overflow: hidden;
       border: 2px solid #fff;
@@ -26,21 +36,25 @@
     #player {
       width: 50px;
       height: 50px;
-      background: red;
+      background: gold;
       position: absolute;
       bottom: 0;
       left: 275px;
+      border-radius: 50%;
     }
 
-    .fallingObject {
-      width: 50px;
-      height: 50px;
+    .coin {
+      width: 30px;
+      height: 30px;
       background: yellow;
+      border-radius: 50%;
       position: absolute;
     }
   </style>
 </head>
 <body>
+  <h1>Лови монету!</h1>
+  <div id="score">Очки: 0</div>
   <div id="gameArea">
     <div id="player"></div>
   </div>
@@ -48,59 +62,21 @@
   <script>
     const player = document.getElementById('player');
     const gameArea = document.getElementById('gameArea');
+    const scoreDisplay = document.getElementById('score');
+
     const gameAreaWidth = gameArea.offsetWidth;
     const gameAreaHeight = gameArea.offsetHeight;
 
-    let playerPositionX = 275;
+    let playerX = 275;
     let playerSpeed = 10;
     let score = 0;
-    let fallingObjects = [];
-    let objectSpeed = 3;
+    let coins = [];
+    let coinSpeed = 3;
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft' && playerPositionX > 0) {
-        playerPositionX -= playerSpeed;
-      } else if (e.key === 'ArrowRight' && playerPositionX < gameAreaWidth - 50) {
-        playerPositionX += playerSpeed;
+      if (e.key === 'ArrowLeft' && playerX > 0) {
+        playerX -= playerSpeed;
+      } else if (e.key === 'ArrowRight' && playerX < gameAreaWidth - 50) {
+        playerX += playerSpeed;
       }
-      player.style.left = playerPositionX + 'px';
-    });
-
-    function createObject() {
-      const obj = document.createElement('div');
-      obj.classList.add('fallingObject');
-      obj.style.left = Math.random() * (gameAreaWidth - 50) + 'px';
-      obj.style.top = '-50px';
-      gameArea.appendChild(obj);
-      fallingObjects.push(obj);
-    }
-
-    function moveObjects() {
-      for (let i = 0; i < fallingObjects.length; i++) {
-        const obj = fallingObjects[i];
-        let top = parseInt(obj.style.top);
-        obj.style.top = top + objectSpeed + 'px';
-
-        if (
-          top > gameAreaHeight - 50 &&
-          top < gameAreaHeight &&
-          parseInt(obj.style.left) > playerPositionX - 50 &&
-          parseInt(obj.style.left) < playerPositionX + 50
-        ) {
-          alert('Game Over! Очки: ' + score);
-          location.reload();
-        }
-
-        if (top > gameAreaHeight) {
-          gameArea.removeChild(obj);
-          fallingObjects.splice(i, 1);
-          score++;
-        }
-      }
-    }
-
-    setInterval(createObject, 1000);
-    setInterval(moveObjects, 20);
-  </script>
-</body>
-</html>
+      player.style
