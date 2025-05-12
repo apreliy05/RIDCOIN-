@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Бизнес-Империя: Стратегия</title>
+    <title>Бизнес-Симулятор</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
             color: #333;
             max-width: 800px;
             margin: 0 auto;
@@ -15,7 +15,7 @@
             background: white;
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         h1 {
             color: #2c3e50;
@@ -25,29 +25,28 @@
             display: flex;
             justify-content: space-between;
             margin: 10px 0;
-            padding: 10px;
+            padding: 15px;
             background: #ecf0f1;
             border-radius: 5px;
+            font-size: 18px;
         }
         button {
             background: #3498db;
             color: white;
             border: none;
-            padding: 10px 15px;
-            margin: 5px;
+            padding: 12px 20px;
+            margin: 8px 5px;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
             transition: background 0.3s;
         }
         button:hover {
             background: #2980b9;
         }
         button:disabled {
-            background: #95a5a6;
+            background: #bdc3c7;
             cursor: not-allowed;
-        }
-        #businesses {
-            margin: 20px 0;
         }
         .business {
             border: 1px solid #ddd;
@@ -57,20 +56,21 @@
             background: #f9f9f9;
         }
         #events {
-            margin-top: 20px;
-            padding: 10px;
+            margin: 20px 0;
+            padding: 15px;
             background: #fffde7;
-            border-left: 4px solid #fbc02d;
+            border-left: 4px solid #f39c12;
+            min-height: 20px;
         }
         .progress-container {
             width: 100%;
             background: #e0e0e0;
             border-radius: 5px;
-            margin: 10px 0;
+            margin: 15px 0;
         }
         .progress-bar {
             height: 20px;
-            background: #4caf50;
+            background: #2ecc71;
             border-radius: 5px;
             width: 0%;
             transition: width 0.5s;
@@ -79,7 +79,7 @@
 </head>
 <body>
     <div id="game-container">
-        <h1>Бизнес-Империя</h1>
+        <h1>Бизнес-Симулятор</h1>
         
         <div class="resource">
             <span>💰 Капитал:</span>
@@ -95,181 +95,194 @@
         </div>
         
         <div class="progress-container">
-            <div id="progress" class="progress-bar"></div>
+            <div class="progress-bar" id="progress"></div>
         </div>
         
         <div id="businesses">
             <div class="business">
-                <h3>Небольшой магазин</h3>
-                <p>Доход: 5,000 ₽/месяц</p>
-                <p>Содержание: 1,000 ₽/месяц</p>
-                <p>Стоимость: 50,000 ₽</p>
+                <h3>Магазин</h3>
+                <p>▸ Доход: <strong>5,000 ₽/месяц</strong></p>
+                <p>▸ Расходы: 1,000 ₽/месяц</p>
+                <p>▸ Стоимость: <strong>50,000 ₽</strong></p>
                 <button onclick="buyBusiness('shop')" id="shop-btn">Купить</button>
+                <span id="shop-owned">0</span> шт.
             </div>
             
             <div class="business">
                 <h3>Кафе</h3>
-                <p>Доход: 15,000 ₽/месяц</p>
-                <p>Содержание: 5,000 ₽/месяц</p>
-                <p>Стоимость: 200,000 ₽</p>
+                <p>▸ Доход: <strong>15,000 ₽/месяц</strong></p>
+                <p>▸ Расходы: 5,000 ₽/месяц</p>
+                <p>▸ Стоимость: <strong>200,000 ₽</strong></p>
                 <button onclick="buyBusiness('cafe')" id="cafe-btn">Купить</button>
+                <span id="cafe-owned">0</span> шт.
             </div>
             
             <div class="business">
-                <h3>IT-стартап</h3>
-                <p>Доход: 50,000 ₽/месяц</p>
-                <p>Содержание: 20,000 ₽/месяц</p>
-                <p>Стоимость: 1,000,000 ₽</p>
+                <h3>IT-Компания</h3>
+                <p>▸ Доход: <strong>50,000 ₽/месяц</strong></p>
+                <p>▸ Расходы: 20,000 ₽/месяц</p>
+                <p>▸ Стоимость: <strong>1,000,000 ₽</strong></p>
                 <button onclick="buyBusiness('it')" id="it-btn">Купить</button>
+                <span id="it-owned">0</span> шт.
             </div>
         </div>
         
         <div>
             <h3>Инвестиции</h3>
-            <button onclick="hireEmployee()">Нанять сотрудника (+5% эффективности, 10,000 ₽)</button>
-            <button onclick="investMarketing()">Инвестировать в маркетинг (+10% репутации, 25,000 ₽)</button>
+            <button onclick="hireEmployee()">Нанять сотрудника (+5% эффективности)</button>
+            <span>Цена: 10,000 ₽</span>
+            <button onclick="investMarketing()">Маркетинг (+10% репутации)</button>
+            <span>Цена: 25,000 ₽</span>
         </div>
         
         <div id="events"></div>
     </div>
 
     <script>
-        // Игровые переменные
-        let money = 1000000;
-        let reputation = 50;
-        let employees = 5;
-        let month = 0;
-        let businesses = {
-            shop: { owned: 0, income: 5000, cost: 1000, price: 50000 },
-            cafe: { owned: 0, income: 15000, cost: 5000, price: 200000 },
-            it: { owned: 0, income: 50000, cost: 20000, price: 1000000 }
+        // Игровые данные
+        const game = {
+            money: 1000000,
+            reputation: 50,
+            employees: 5,
+            month: 0,
+            businesses: {
+                shop: { owned: 0, income: 5000, cost: 1000, price: 50000 },
+                cafe: { owned: 0, income: 15000, cost: 5000, price: 200000 },
+                it: { owned: 0, income: 50000, cost: 20000, price: 1000000 }
+            },
+            events: [
+                { 
+                    text: "📉 Кризис! Доходы -20% в этом месяце", 
+                    effect: () => modifyIncome(0.8) 
+                },
+                { 
+                    text: "📈 Бум! Доходы +30% в этом месяце", 
+                    effect: () => modifyIncome(1.3) 
+                },
+                { 
+                    text: "💡 Инновация! Получено 200,000 ₽", 
+                    effect: () => { game.money += 200000; updateUI(); } 
+                },
+                { 
+                    text: "🏆 Награда! Репутация +15%", 
+                    effect: () => { game.reputation = Math.min(100, game.reputation + 15); updateUI(); } 
+                }
+            ]
         };
-        
-        // Обновление интерфейса
+
+        // Основные функции
         function updateUI() {
-            document.getElementById('money').textContent = formatMoney(money) + ' ₽';
-            document.getElementById('reputation').textContent = Math.round(reputation) + '%';
-            document.getElementById('employees').textContent = employees;
+            // Обновляем ресурсы
+            document.getElementById('money').textContent = formatMoney(game.money) + ' ₽';
+            document.getElementById('reputation').textContent = Math.round(game.reputation) + '%';
+            document.getElementById('employees').textContent = game.employees;
+            
+            // Обновляем бизнесы
+            document.getElementById('shop-owned').textContent = game.businesses.shop.owned;
+            document.getElementById('cafe-owned').textContent = game.businesses.cafe.owned;
+            document.getElementById('it-owned').textContent = game.businesses.it.owned;
             
             // Прогресс месяца
-            document.getElementById('progress').style.width = (month % 30 / 30 * 100) + '%';
+            document.getElementById('progress').style.width = (game.month % 30 / 30 * 100) + '%';
             
-            // Проверка возможности покупки
-            document.getElementById('shop-btn').disabled = money < businesses.shop.price;
-            document.getElementById('cafe-btn').disabled = money < businesses.cafe.price;
-            document.getElementById('it-btn').disabled = money < businesses.it.price;
+            // Кнопки
+            document.getElementById('shop-btn').disabled = game.money < game.businesses.shop.price;
+            document.getElementById('cafe-btn').disabled = game.money < game.businesses.cafe.price;
+            document.getElementById('it-btn').disabled = game.money < game.businesses.it.price;
         }
-        
-        // Форматирование денег
+
         function formatMoney(amount) {
             return amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
-        
-        // Покупка бизнеса
+
         function buyBusiness(type) {
-            const biz = businesses[type];
-            if (money >= biz.price) {
-                money -= biz.price;
+            const biz = game.businesses[type];
+            if (game.money >= biz.price) {
+                game.money -= biz.price;
                 biz.owned++;
-                showMessage(`Вы купили новый бизнес: ${type === 'shop' ? 'магазин' : type === 'cafe' ? 'кафе' : 'IT-стартап'}!`);
+                showMessage(`Приобретен ${type === 'shop' ? 'магазин' : type === 'cafe' ? 'кафе' : 'IT-бизнес'}!`);
                 updateUI();
             }
         }
-        
-        // Нанять сотрудника
+
         function hireEmployee() {
-            if (money >= 10000) {
-                money -= 10000;
-                employees++;
-                showMessage("Вы наняли нового сотрудника! Эффективность +5%");
+            if (game.money >= 10000) {
+                game.money -= 10000;
+                game.employees++;
+                showMessage("Новый сотрудник нанят! Эффективность +5%");
                 updateUI();
             }
         }
-        
-        // Инвестировать в маркетинг
+
         function investMarketing() {
-            if (money >= 25000) {
-                money -= 25000;
-                reputation = Math.min(100, reputation + 10);
-                showMessage("Маркетинговая кампания успешна! Репутация +10%");
+            if (game.money >= 25000) {
+                game.money -= 25000;
+                game.reputation = Math.min(100, game.reputation + 10);
+                showMessage("Маркетинговая кампания успешна!");
                 updateUI();
             }
         }
-        
-        // Случайные события
+
+        function modifyIncome(multiplier) {
+            Object.values(game.businesses).forEach(b => {
+                b.income *= multiplier;
+            });
+        }
+
         function randomEvent() {
-            const events = [
-                { 
-                    text: "📉 Экономический кризис! Все доходы снижены на 20% в этом месяце", 
-                    effect: () => Object.keys(businesses).forEach(b => businesses[b].income *= 0.8) 
-                },
-                { 
-                    text: "📈 Бум на рынке! Все доходы увеличены на 30% в этом месяце", 
-                    effect: () => Object.keys(businesses).forEach(b => businesses[b].income *= 1.3) 
-                },
-                { 
-                    text: "🛠️ Ваш IT-стартап разработал успешное приложение! Получено 200,000 ₽", 
-                    effect: () => { money += 200000; } 
-                },
-                { 
-                    text: "👥 Ваши сотрудники провели успешную презентацию. Репутация +15%", 
-                    effect: () => { reputation = Math.min(100, reputation + 15); } 
-                }
-            ];
-            
-            if (Math.random() < 0.3) { // 30% шанс события
-                const event = events[Math.floor(Math.random() * events.length)];
+            if (Math.random() < 0.3 && game.month > 0) {
+                const event = game.events[Math.floor(Math.random() * game.events.length)];
                 showEvent(event.text);
                 event.effect();
             }
         }
-        
-        // Показать сообщение
+
         function showMessage(text) {
             const eventDiv = document.getElementById('events');
             eventDiv.innerHTML = `<p>${text}</p>`;
             setTimeout(() => eventDiv.innerHTML = '', 3000);
         }
-        
-        // Показать событие
+
         function showEvent(text) {
             const eventDiv = document.getElementById('events');
             eventDiv.innerHTML = `<p><strong>СОБЫТИЕ:</strong> ${text}</p>`;
             setTimeout(() => eventDiv.innerHTML = '', 5000);
         }
-        
-        // Игровой цикл (1 месяц = 1 секунда)
+
+        // Игровой цикл
         setInterval(() => {
-            month++;
+            game.month++;
             
-            // Доход от бизнесов
+            // Расчет доходов
             let income = 0;
             let expenses = 0;
             
-            Object.keys(businesses).forEach(b => {
-                income += businesses[b].owned * businesses[b].income * (1 + employees * 0.05) * (reputation / 100);
-                expenses += businesses[b].owned * businesses[b].cost;
+            Object.values(game.businesses).forEach(b => {
+                income += b.owned * b.income * (1 + game.employees * 0.05) * (game.reputation / 100);
+                expenses += b.owned * b.cost;
             });
             
-            money += income - expenses;
+            game.money += income - expenses;
             
-            // Случайные события каждые 3 месяца
-            if (month % 3 === 0) randomEvent();
+            // События
+            if (game.month % 3 === 0) randomEvent();
             
             // Постепенное снижение репутации
-            if (month % 5 === 0) reputation = Math.max(10, reputation - 2);
+            if (game.month % 5 === 0) {
+                game.reputation = Math.max(10, game.reputation - 2);
+            }
             
             updateUI();
             
-            // Победа при достижении 10 млн
-            if (money >= 10000000) {
-                showEvent("🎉 ПОБЕДА! Вы построили бизнес-империю с капиталом 10,000,000 ₽!");
+            // Проверка победы
+            if (game.money >= 10000000) {
+                showEvent("🎉 ПОБЕДА! Ваш капитал достиг 10,000,000 ₽!");
                 clearInterval(gameInterval);
             }
             
         }, 1000);
-        
-        // Инициализация игры
+
+        // Инициализация
         updateUI();
     </script>
 </body>
