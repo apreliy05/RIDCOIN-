@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Лови монету</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin-top: 10px;
+    }
+
+    #score {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    #gameArea {
+      width: 600px;
+      height: 400px;
+      background: #333;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid #fff;
+    }
+
+    #player {
+      width: 50px;
+      height: 50px;
+      background: gold;
+      position: absolute;
+      bottom: 0;
+      left: 275px;
+      border-radius: 50%;
+    }
+
+    .coin {
+      width: 30px;
+      height: 30px;
+      background: yellow;
+      border-radius: 50%;
+      position: absolute;
+    }
+  </style>
+</head>
+<body>
+  <h1>Лови монету!</h1>
+  <div id="score">Очки: 0</div>
+  <div id="gameArea">
+    <div id="player"></div>
+  </div>
+
+  <script>
+    window.onload = () => {
+      const player = document.getElementById('player');
+      const gameArea = document.getElementById('gameArea');
+      const scoreDisplay = document.getElementById('score');
+
+      const gameAreaWidth = gameArea.offsetWidth;
+      const gameAreaHeight = gameArea.offsetHeight;
+
+      let playerX = 275;
+      let playerY = gameAreaHeight - 50;
+      let playerSpeed = 10;
+      let score = 0;
+      let coins = [];
+      let coinSpeed = 3;
+
+      // Двигаем игрока при клике
+      gameArea.addEventListener('click', (e) => {
+        const clickX = e.clientX - gameArea.offsetLeft;
+        playerX = clickX - 25; // Сдвигаем позицию, чтобы игрок был по центру клика
+        player.style.left = playerX + 'px';
+      });
+
+      // Двигаем игрока при нажатии стрелок
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' && playerX > 0) {
+          playerX -= playerSpeed;
+        } else if (e.key === 'ArrowRight' && playerX < gameAreaWidth - 50) {
+          playerX += playerSpeed;
+        }
+        player.style.left = playerX + 'px';
+      });
+
+      function spawnCoin() {
+        const coin = document.createElement('div');
+        coin.classList.add('coin');
+        coin.style.left = Math.random() * (gameAreaWidth - 30) + 'px';
+        coin.style.top = '-30px';
+        gameArea.appendChild(coin);
+        coins.push(coin);
+      }
+
+      function moveCoins() {
+        for (let i = 0; i < coins.length; i++) {
+          const coin = coins[i];
+          let top = parseInt(coin.style.top);
+          coin.style.top = top + coinSpeed + 'px';
+
+          if (
+            top > gameAreaHeight - 50 &&
+            parseInt(coin.style.left) > playerX - 30 &&
+            parseInt(coin.style.left) < playerX + 50
+          ) {
+            gameArea.removeChild(coin);
+            coins.splice(i, 1);
+            score++;
+            scoreDisplay.textContent = 'Очки: ' + score;
+          } else if (top > gameAreaHeight) {
+            gameArea.removeChild(coin);
+            coins.splice(i, 1);
+          }
+        }
+      }
+
+      setInterval(spawnCoin, 1000);
+      setInterval(moveCoins, 20);
+    };
+  </script>
+</body>
+</html>
