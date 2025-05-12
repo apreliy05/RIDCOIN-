@@ -134,6 +134,10 @@
             from { transform: scale(1); opacity: 0.8; }
             to { transform: scale(1.1); opacity: 1; }
         }
+        .reset-btn {
+            background: linear-gradient(to bottom, #e74c3c, #c0392b);
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -165,6 +169,8 @@
         <div class="farm" id="farm">
             <!-- Грядки будут созданы через JavaScript -->
         </div>
+        
+        <button class="water-btn reset-btn" id="reset-btn">Сбросить прогресс</button>
     </div>
 
     <script>
@@ -174,14 +180,15 @@
             maxWater: 4,
             harvest: 0,
             plants: [],
-            waterTimer: 60, // 1 минута
+            waterTimer: 60,
+            lastUpdate: Date.now(),
             growthStages: [
                 { name: "Семечко", img: "🌱", growth: 0 },
                 { name: "Росток", img: "🌿", growth: 0.3 },
                 { name: "Растение", img: "🌾", growth: 0.7 },
                 { name: "Урожай", img: "🍅", growth: 1 }
             ],
-            targetHarvest: 27 // Цель - собрать 27 единиц
+            targetHarvest: 27
         };
 
         // Элементы интерфейса
@@ -191,27 +198,89 @@
         const waterTimerEl = document.getElementById('water-timer');
         const messageEl = document.getElementById('message');
         const waterAllBtn = document.getElementById('water-all');
+        const resetBtn = document.getElementById('reset-btn');
+
+        // Загрузка сохранения
+        function loadGame() {
+            const savedGame = localStorage.getItem('osoferm_save');
+            if (savedGame) {
+                try {
+                    const parsed = JSON.parse(savedGame);
+                    
+                    // Восстанавливаем основные параметры
+                    game.water = parsed.water;
+                    game.harvest = parsed.harvest;
+                    game.waterTimer = parsed.waterTimer;
+                    game.lastUpdate = parsed.lastUpdate;
+                    
+                    // Рассчитываем прошедшее время
+                    const timePassed = Math.floor((Date.now() - game.lastUpdate) / 1000);
+                    if (timePassed > 0) {
+                        // Восстанавливаем воду за прошедшее время
+                        const waterToAdd = Math.floor(timePassed / 60);
+                        game.water = Math.min(game.maxWater, game.water + waterToAdd);
+                        game.waterTimer = 60 - (timePassed % 60);
+                    }
+                    
+                    // Восстанавливаем растения
+                    if (parsed.plants && parsed.plants.length === 9) {
+                        game.plants = parsed.plants;
+                    }
+                    
+                    showMessage("Прогресс загружен!");
+                } catch (e) {
+                    console.error("Ошибка загрузки:", e);
+                    initNewGame();
+                }
+            } else {
+                initNewGame();
+            }
+            updateUI();
+        }
+
+        // Новая игра
+        function initNewGame() {
+            game.water = 4;
+            game.harvest = 0;
+            game.waterTimer = 60;
+            game.plants = Array(9).fill().map(() => ({ stage: -1, progress: 0 }));
+            game.lastUpdate = Date.now();
+        }
+
+        // Сохранение игры
+        function saveGame() {
+            game.lastUpdate = Date.now();
+            const gameData = {
+                water: game.water,
+                harvest: game.harvest,
+                waterTimer: game.waterTimer,
+                lastUpdate: game.lastUpdate,
+                plants: game.plants
+            };
+            localStorage.setItem('osoferm_save', JSON.stringify(gameData));
+        }
 
         // Создаем грядки
-        for (let i = 0; i < 9; i++) {
-            const plot = document.createElement('div');
-            plot.className = 'plot';
-            plot.innerHTML = '<div class="progress-bar"></div><div>🪴</div>';
-            plot.onclick = () => plantSeed(i);
-            farmEl.appendChild(plot);
-            game.plants.push({ stage: -1, progress: 0, element: plot });
+        function createPlots() {
+            farmEl.innerHTML = '';
+            game.plants.forEach((plant, index) => {
+                const plot = document.createElement('div');
+                plot.className = 'plot';
+                plot.onclick = () => plantSeed(index);
+                farmEl.appendChild(plot);
+                plant.element = plot;
+                updatePlant(index);
+            });
         }
 
         // Посадить семечко
         function plantSeed(index) {
             if (game.plants[index].stage === -1) {
-                game.plants[index] = { 
-                    stage: 0, 
-                    progress: 0, 
-                    element: game.plants[index].element 
-                };
+                game.plants[index].stage = 0;
+                game.plants[index].progress = 0;
                 updatePlant(index);
                 showMessage("Семечко посажено! Поливайте для роста.");
+                saveGame();
             } else if (game.plants[index].stage === 3) {
                 harvestPlant(index);
             }
@@ -222,14 +291,16 @@
             if (game.water > 0 && game.plants[index].stage !== -1 && game.plants[index].stage < 3) {
                 game.water--;
                 game.plants[index].progress += 0.2 + Math.random() * 0.1;
-                updateWater();
-                updatePlant(index);
                 
                 if (game.plants[index].progress >= 1) {
                     game.plants[index].stage++;
                     game.plants[index].progress = 0;
                     showMessage(`Растение выросло до стадии "${game.growthStages[game.plants[index].stage].name}"!`);
                 }
+                
+                updateWater();
+                updatePlant(index);
+                saveGame();
             }
         }
 
@@ -247,16 +318,16 @@
 
         // Собрать урожай
         function harvestPlant(index) {
-            const plant = game.plants[index];
-            const harvestAmount = 1; // 1 единица урожая с растения
+            const harvestAmount = 1;
             game.harvest += harvestAmount;
-            plant.stage = -1;
-            plant.progress = 0;
+            game.plants[index].stage = -1;
+            game.plants[index].progress = 0;
+            
             updatePlant(index);
             updateHarvest();
             showMessage(`Собрано +1 урожая! Всего: ${game.harvest}/${game.targetHarvest}`);
+            saveGame();
             
-            // Проверка победы
             if (game.harvest >= game.targetHarvest) {
                 showMessage(`🎉 Поздравляем! Вы собрали ${game.targetHarvest} единиц урожая и выиграли!`);
                 confettiEffect();
@@ -267,6 +338,8 @@
         function updatePlant(index) {
             const plant = game.plants[index];
             const plot = plant.element;
+            
+            if (!plot) return;
             
             if (plant.stage === -1) {
                 plot.innerHTML = '<div class="progress-bar"></div><div class="plant">🪴</div>';
@@ -279,15 +352,15 @@
             }
         }
 
-        // Обновить счетчик воды
-        function updateWater() {
+        // Обновить интерфейс
+        function updateUI() {
             waterCountEl.textContent = `${game.water}/${game.maxWater}`;
             waterAllBtn.disabled = game.water === 0;
-        }
-
-        // Обновить счетчик урожая
-        function updateHarvest() {
-            harvestEl.textContent = `${game.harvest}`;
+            harvestEl.textContent = game.harvest;
+            
+            const mins = Math.floor(game.waterTimer / 60);
+            const secs = game.waterTimer % 60;
+            waterTimerEl.textContent = `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
         // Показать сообщение
@@ -297,18 +370,23 @@
 
         // Таймер восстановления воды
         function updateWaterTimer() {
-            game.waterTimer--;
+            const now = Date.now();
+            const timePassed = Math.floor((now - game.lastUpdate) / 1000);
             
-            if (game.waterTimer <= 0) {
-                game.water = Math.min(game.water + 1, game.maxWater);
-                game.waterTimer = 60;
-                updateWater();
-                if (game.water === 1) showMessage("Вода восстановлена (+1)!");
+            if (timePassed > 0) {
+                game.waterTimer -= timePassed;
+                game.lastUpdate = now;
+                
+                while (game.waterTimer <= 0 && game.water < game.maxWater) {
+                    game.water++;
+                    game.waterTimer += 60;
+                    if (game.water === 1) showMessage("Вода восстановлена (+1)!");
+                }
+                
+                saveGame();
             }
             
-            const mins = Math.floor(game.waterTimer / 60);
-            const secs = game.waterTimer % 60;
-            waterTimerEl.textContent = `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            updateUI();
         }
 
         // Эффект конфетти при победе
@@ -334,25 +412,36 @@
                 }, Math.random() * 3000);
             }
             
-            // Добавляем CSS анимацию
             const style = document.createElement('style');
-            style.textContent = `
-                @keyframes fall {
-                    to {
-                        transform: translateY(100vh) rotate(360deg);
-                        opacity: 0;
-                    }
-                }
-            `;
+            style.textContent = `@keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }`;
             document.head.appendChild(style);
         }
 
+        // Сброс игры
+        function resetGame() {
+            if (confirm("Вы точно хотите сбросить весь прогресс?")) {
+                localStorage.removeItem('osoferm_save');
+                initNewGame();
+                createPlots();
+                updateUI();
+                showMessage("Игра сброшена. Начните заново!");
+            }
+        }
+
+        // Инициализация
+        loadGame();
+        createPlots();
+        updateUI();
+
         // Назначение кнопок
         waterAllBtn.onclick = waterAll;
-        updateWater();
+        resetBtn.onclick = resetGame;
 
-        // Игровой цикл
+        // Игровой цикл (проверяем каждую секунду)
         setInterval(updateWaterTimer, 1000);
+        
+        // Сохраняем при закрытии
+        window.addEventListener('beforeunload', saveGame);
     </script>
 </body>
 </html>
