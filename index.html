@@ -1,500 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ОСОФЕРМ</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
-            background-size: cover;
-            text-align: center;
-            color: #fff;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-        }
-        #game-container {
-            max-width: 600px;
-            margin: 20px auto;
-            background: rgba(255, 255, 255, 0.85);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 0 25px rgba(0,0,0,0.3);
-            color: #333;
-            text-shadow: none;
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        h1 {
-            color: #2e7d32;
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-        }
-        .farm {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin: 25px 0;
-        }
-        .plot {
-            height: 120px;
-            background: rgba(200, 230, 201, 0.9);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-        }
-        .plot:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        .plant {
-            width: 80px;
-            height: 80px;
-            transition: all 0.3s;
-            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
-        }
-        .progress-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 6px;
-            background: linear-gradient(to right, #4caf50, #8bc34a);
-            width: 0%;
-            transition: width 0.5s;
-        }
-        .water-btn {
-            background: linear-gradient(to bottom, #2196f3, #1976d2);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 16px;
-            margin: 15px 5px;
-            box-shadow: 0 4px 0 #0d47a1;
-            transition: all 0.2s;
-        }
-        .water-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 0 #0d47a1;
-        }
-        .water-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px 0 #0d47a1;
-        }
-        .water-btn:disabled {
-            background: linear-gradient(to bottom, #bbdefb, #90caf9);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: 0 4px 0 #78909c;
-        }
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin: 25px 0;
-            flex-wrap: wrap;
-        }
-        .stat {
-            background: rgba(241, 248, 233, 0.9);
-            padding: 12px;
-            border-radius: 10px;
-            min-width: 100px;
-            margin: 5px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-        }
-        .stat div:first-child {
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #2e7d32;
-        }
-        .message {
-            margin: 20px 0;
-            padding: 15px;
-            background: rgba(255, 249, 196, 0.9);
-            border-radius: 10px;
-            font-size: 18px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            border-left: 5px solid #fbc02d;
-        }
-        .sun {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 50px;
-            animation: pulse 2s infinite alternate;
-        }
-        @keyframes pulse {
-            from { transform: scale(1); opacity: 0.8; }
-            to { transform: scale(1.1); opacity: 1; }
-        }
-        .reset-btn {
-            background: linear-gradient(to bottom, #e74c3c, #c0392b);
-            margin-top: 10px;
-        }
-        .harvest-animation {
-            animation: harvestPulse 0.5s;
-        }
-        @keyframes harvestPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.3); color: #e67e22; }
-            100% { transform: scale(1); }
-        }
-        
-        /* Для мобильных устройств */
-        @media (max-width: 600px) {
-            .farm {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .stat {
-                min-width: 80px;
-                font-size: 14px;
-            }
-            #game-container {
-                padding: 15px;
-                margin: 10px;
-            }
-            .water-btn {
-                padding: 10px 20px;
-                font-size: 14px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="sun">☀️</div>
-    
-    <div id="game-container">
-        <h1>🌱 ОСОФЕРМ</h1>
-        <p>Соберите больше 27 единиц урожая, чтобы получить награду!</p>
-        
-        <div class="stats">
-            <div class="stat">
-                <div>💧 Вода</div>
-                <div id="water-count">4/4</div>
-            </div>
-            <div class="stat">
-                <div>🌱 Урожай</div>
-                <div id="harvest">0</div>
-            </div>
-            <div class="stat">
-                <div>⏱️ Восстановление</div>
-                <div id="water-timer">00:01:00</div>
-            </div>
-        </div>
-        
-        <button class="water-btn" id="water-all">Полить все (1 вода)</button>
-        
-        <div class="message" id="message">Нажмите на грядку, чтобы посадить растение!</div>
-        
-        <div class="farm" id="farm">
-            <!-- Грядки будут созданы через JavaScript -->
-        </div>
-        
-        <button class="water-btn reset-btn" id="reset-btn">Сбросить прогресс</button>
-    </div>
-
-    <script>
-        // Состояние игры
-        const game = {
-            water: 4,
-            maxWater: 4,
-            harvest: 0,
-            plants: [],
-            waterTimer: 60,
-            lastUpdate: Date.now(),
-            growthStages: [
-                { name: "Семечко", img: "🌱", growth: 0 },
-                { name: "Росток", img: "🌿", growth: 0.3 },
-                { name: "Растение", img: "🌾", growth: 0.7 },
-                { name: "Урожай", img: "🍅", growth: 1 }
-            ],
-            targetHarvest: 27
-        };
-
-        // Элементы интерфейса
-        const farmEl = document.getElementById('farm');
-        const waterCountEl = document.getElementById('water-count');
-        const harvestEl = document.getElementById('harvest');
-        const waterTimerEl = document.getElementById('water-timer');
-        const messageEl = document.getElementById('message');
-        const waterAllBtn = document.getElementById('water-all');
-        const resetBtn = document.getElementById('reset-btn');
-
-        // Загрузка сохранения
-        function loadGame() {
-            const savedGame = localStorage.getItem('osoferm_save');
-            if (savedGame) {
-                try {
-                    const parsed = JSON.parse(savedGame);
-                    
-                    // Восстанавливаем основные параметры
-                    game.water = parsed.water;
-                    game.harvest = parsed.harvest;
-                    game.waterTimer = parsed.waterTimer;
-                    game.lastUpdate = parsed.lastUpdate;
-                    
-                    // Рассчитываем прошедшее время
-                    const timePassed = Math.floor((Date.now() - game.lastUpdate) / 1000);
-                    if (timePassed > 0) {
-                        // Восстанавливаем воду за прошедшее время
-                        const waterToAdd = Math.floor(timePassed / 60);
-                        game.water = Math.min(game.maxWater, game.water + waterToAdd);
-                        game.waterTimer = 60 - (timePassed % 60);
-                    }
-                    
-                    // Восстанавливаем растения
-                    if (parsed.plants && parsed.plants.length === 9) {
-                        game.plants = parsed.plants;
-                    }
-                    
-                    setTimeout(() => {
-                        showMessage("Добро пожаловать назад! Ваш прогресс загружен.");
-                    }, 1000);
-                } catch (e) {
-                    console.error("Ошибка загрузки:", e);
-                    initNewGame();
-                }
-            } else {
-                initNewGame();
-                setTimeout(() => {
-                    showMessage("Совет: Начните с посадки семян на грядках!");
-                }, 2000);
-            }
-            updateUI();
-        }
-
-        // Новая игра
-        function initNewGame() {
-            game.water = 4;
-            game.harvest = 0;
-            game.waterTimer = 60;
-            game.plants = Array(9).fill().map(() => ({ stage: -1, progress: 0 }));
-            game.lastUpdate = Date.now();
-        }
-
-        // Сохранение игры
-        function saveGame() {
-            game.lastUpdate = Date.now();
-            const gameData = {
-                water: game.water,
-                harvest: game.harvest,
-                waterTimer: game.waterTimer,
-                lastUpdate: game.lastUpdate,
-                plants: game.plants
-            };
-            localStorage.setItem('osoferm_save', JSON.stringify(gameData));
-        }
-
-        // Создаем грядки
-        function createPlots() {
-            farmEl.innerHTML = '';
-            game.plants.forEach((plant, index) => {
-                const plot = document.createElement('div');
-                plot.className = 'plot';
-                plot.onclick = () => plantSeed(index);
-                farmEl.appendChild(plot);
-                plant.element = plot;
-                updatePlant(index);
-            });
-        }
-
-        // Посадить семечко
-        function plantSeed(index) {
-            if (game.plants[index].stage === -1) {
-                game.plants[index].stage = 0;
-                game.plants[index].progress = 0;
-                updatePlant(index);
-                showMessage("Семечко посажено! Поливайте для роста.");
-                saveGame();
-            } else if (game.plants[index].stage === 3) {
-                harvestPlant(index);
-            }
-        }
-
-        // Полить растение
-        function waterPlant(index) {
-            if (game.water > 0 && game.plants[index].stage !== -1 && game.plants[index].stage < 3) {
-                game.water--;
-                game.plants[index].progress += 0.2 + Math.random() * 0.1;
-                
-                if (game.plants[index].progress >= 1) {
-                    game.plants[index].stage++;
-                    game.plants[index].progress = 0;
-                    showMessage(`Растение выросло до стадии "${game.growthStages[game.plants[index].stage].name}"!`);
-                }
-                
-                updateWater();
-                updatePlant(index);
-                saveGame();
-            }
-        }
-
-        // Полить все растения
-        function waterAll() {
-            if (game.water > 0) {
-                for (let i = 0; i < game.plants.length; i++) {
-                    if (game.plants[i].stage !== -1 && game.plants[i].stage < 3) {
-                        waterPlant(i);
-                    }
-                }
-                showMessage("Все растения политы!");
-            }
-        }
-
-        // Анимация сбора урожая
-        function animateHarvest() {
-            harvestEl.classList.add('harvest-animation');
-            setTimeout(() => {
-                harvestEl.classList.remove('harvest-animation');
-            }, 500);
-        }
-
-        // Собрать урожай
-        function harvestPlant(index) {
-            const harvestAmount = 1;
-            game.harvest += harvestAmount;
-            
-            // Анимация
-            animateHarvest();
-            
-            game.plants[index].stage = -1;
-            game.plants[index].progress = 0;
-            
-            updatePlant(index);
-            updateHarvest();
-            showMessage(`Собрано +1 урожая! Всего: ${game.harvest}/${game.targetHarvest}`);
-            saveGame();
-            
-            if (game.harvest >= game.targetHarvest) {
-                showMessage(`🎉 Поздравляем! Вы собрали ${game.targetHarvest} единиц урожая и выиграли!`);
-                confettiEffect();
-            }
-        }
-
-        // Обновить отображение растения
-        function updatePlant(index) {
-            const plant = game.plants[index];
-            const plot = plant.element;
-            
-            if (!plot) return;
-            
-            if (plant.stage === -1) {
-                plot.innerHTML = '<div class="progress-bar"></div><div class="plant">🪴</div>';
-            } else {
-                const stage = game.growthStages[plant.stage];
-                plot.innerHTML = `
-                    <div class="progress-bar" style="width:${plant.progress * 100}%"></div>
-                    <div class="plant">${stage.img}</div>
-                `;
-            }
-        }
-
-        // Обновить интерфейс
-        function updateUI() {
-            waterCountEl.textContent = `${game.water}/${game.maxWater}`;
-            waterAllBtn.disabled = game.water === 0;
-            harvestEl.textContent = game.harvest;
-            
-            const mins = Math.floor(game.waterTimer / 60);
-            const secs = game.waterTimer % 60;
-            waterTimerEl.textContent = `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-
-        // Показать сообщение
-        function showMessage(text) {
-            messageEl.textContent = text;
-        }
-
-        // Таймер восстановления воды
-        function updateWaterTimer() {
-            const now = Date.now();
-            const timePassed = Math.floor((now - game.lastUpdate) / 1000);
-            
-            if (timePassed > 0) {
-                game.waterTimer -= timePassed;
-                game.lastUpdate = now;
-                
-                while (game.waterTimer <= 0 && game.water < game.maxWater) {
-                    game.water++;
-                    game.waterTimer += 60;
-                    if (game.water === 1) showMessage("Вода восстановлена (+1)!");
-                }
-                
-                saveGame();
-            }
-            
-            updateUI();
-        }
-
-        // Эффект конфетти при победе
-        function confettiEffect() {
-            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
-            for (let i = 0; i < 100; i++) {
-                setTimeout(() => {
-                    const confetti = document.createElement('div');
-                    confetti.style.position = 'fixed';
-                    confetti.style.left = Math.random() * 100 + 'vw';
-                    confetti.style.top = '-20px';
-                    confetti.style.fontSize = (Math.random() * 20 + 10) + 'px';
-                    confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
-                    confetti.textContent = ['🎉', '✨', '🌟', '🎊', '🍅', '🌱'][Math.floor(Math.random() * 6)];
-                    confetti.style.zIndex = 1000;
-                    confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear forwards`;
-                    
-                    document.body.appendChild(confetti);
-                    
-                    setTimeout(() => {
-                        confetti.remove();
-                    }, 5000);
-                }, Math.random() * 3000);
-            }
-            
-            const style = document.createElement('style');
-            style.textContent = `@keyframes fall { to { transform: translateY(100vh) rotate(360deg); opacity: 0; } }`;
-            document.head.appendChild(style);
-        }
-
-        // Сброс игры
-        function resetGame() {
-            if (confirm("Вы точно хотите сбросить весь прогресс?")) {
-                localStorage.removeItem('osoferm_save');
-                initNewGame();
-                createPlots();
-                updateUI();
-                showMessage("Игра сброшена. Начните заново!");
-            }
-        }
-
-        // Инициализация
-        loadGame();
-        createPlots();
-        updateUI();
-
-        // Назначение кнопок
-        waterAllBtn.onclick = waterAll;
-        resetBtn.onclick = resetGame;
-
-        // Игровой цикл (проверяем каждую секунду)
-        setInterval(updateWaterTimer, 1000);
-        
-        // Сохраняем при закрытии
-        window.addEventListener('beforeunload', saveGame);
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html>
-<head>
     <title>ОСОФЕРМ ПРО</title>
     <style>
-        /* Обновленные стили */
         :root {
             --primary-color: #2e7d32;
             --secondary-color: #2196f3;
@@ -526,7 +34,6 @@
             border: 1px solid rgba(255,255,255,0.3);
         }
         
-        /* Добавим вкладки */
         .tabs {
             display: flex;
             margin-bottom: 20px;
@@ -540,6 +47,7 @@
             margin-right: 5px;
             border-radius: 5px 5px 0 0;
             transition: all 0.3s;
+            color: #333;
         }
         
         .tab.active {
@@ -555,8 +63,187 @@
             display: block;
         }
         
-        /* Остальные стили оставляем из предыдущей версии, дополняем новыми */
-        /* ... */
+        .farm {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .plot {
+            height: 120px;
+            background: rgba(200, 230, 201, 0.9);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+        
+        .plot:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .plant {
+            width: 80px;
+            height: 80px;
+            transition: all 0.3s;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+        
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            background: linear-gradient(to right, #4caf50, #8bc34a);
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        .water-btn {
+            background: linear-gradient(to bottom, var(--secondary-color), #1976d2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 15px 5px;
+            box-shadow: 0 4px 0 #0d47a1;
+            transition: all 0.2s;
+        }
+        
+        .water-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #0d47a1;
+        }
+        
+        .water-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #0d47a1;
+        }
+        
+        .water-btn:disabled {
+            background: linear-gradient(to bottom, #bbdefb, #90caf9);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 0 #78909c;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            background: rgba(241, 248, 233, 0.9);
+            padding: 12px;
+            border-radius: 10px;
+            min-width: 100px;
+            margin: 5px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        
+        .stat div:first-child {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+        
+        .message {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 249, 196, 0.9);
+            border-radius: 10px;
+            font-size: 18px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            border-left: 5px solid var(--warning-color);
+        }
+        
+        .sun {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 50px;
+            animation: pulse 2s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 0.8; }
+            to { transform: scale(1.1); opacity: 1; }
+        }
+        
+        .reset-btn {
+            background: linear-gradient(to bottom, var(--danger-color), #c0392b);
+            margin-top: 10px;
+        }
+        
+        .harvest-animation {
+            animation: harvestPulse 0.5s;
+        }
+        
+        @keyframes harvestPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); color: #e67e22; }
+            100% { transform: scale(1); }
+        }
+        
+        .seed-item, .upgrade-item {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .seed-item button, .upgrade-item button {
+            background: var(--primary-color);
+            border: none;
+            padding: 8px 15px;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .money-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 600px) {
+            .farm {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .stat {
+                min-width: 80px;
+                font-size: 14px;
+            }
+            #game-container {
+                padding: 15px;
+                margin: 10px;
+            }
+            .water-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+            .tabs {
+                flex-wrap: wrap;
+            }
+            .tab {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -564,6 +251,7 @@
     
     <div id="game-container">
         <h1>🌿 ОСОФЕРМ ПРО</h1>
+        <div class="money-display">💰: <span id="money-display">100</span></div>
         
         <div class="tabs">
             <div class="tab active" onclick="openTab('farm')">Ферма</div>
@@ -574,82 +262,219 @@
         
         <!-- Вкладка Фермы -->
         <div id="farm" class="tab-content active">
-            <!-- Содержимое фермы из предыдущей версии -->
+            <div class="stats">
+                <div class="stat">
+                    <div>💧 Вода</div>
+                    <div id="water-count">4/4</div>
+                </div>
+                <div class="stat">
+                    <div>🌱 Урожай</div>
+                    <div id="harvest">0</div>
+                </div>
+                <div class="stat">
+                    <div>⏱️ Восстановление</div>
+                    <div id="water-timer">00:01:00</div>
+                </div>
+            </div>
+            
+            <button class="water-btn" id="water-all">Полить все (1 вода)</button>
+            
+            <div class="message" id="message">Нажмите на грядку, чтобы посадить растение!</div>
+            
+            <div class="farm" id="farm-grid"></div>
         </div>
         
-        <!-- Новая вкладка Магазина -->
+        <!-- Вкладка Магазина -->
         <div id="market" class="tab-content">
             <h2>🏪 Магазин семян</h2>
-            <div class="seed-shop" id="seed-shop">
-                <!-- Товары будут добавляться через JS -->
-            </div>
+            <div class="seed-shop" id="seed-shop"></div>
         </div>
         
         <!-- Вкладка Улучшений -->
         <div id="upgrades" class="tab-content">
             <h2>⚙️ Улучшения фермы</h2>
-            <div class="upgrades-list" id="upgrades-list">
-                <!-- Улучшения будут добавляться через JS -->
-            </div>
+            <div class="upgrades-list" id="upgrades-list"></div>
         </div>
         
         <!-- Вкладка Статистики -->
         <div id="stats" class="tab-content">
             <h2>📊 Ваша статистика</h2>
-            <div class="statistics" id="statistics">
-                <!-- Статистика будет добавляться через JS -->
-            </div>
+            <div class="statistics" id="statistics"></div>
         </div>
+        
+        <button class="water-btn reset-btn" id="reset-btn">Сбросить прогресс</button>
     </div>
 
     <script>
-        // Расширенные данные игры
+        // Состояние игры
         const game = {
-            // ... предыдущие данные ...
-            
-            // Новые данные
+            water: 4,
+            maxWater: 4,
+            harvest: 0,
             money: 100,
             experience: 0,
             level: 1,
+            plants: [],
+            waterTimer: 60,
+            lastUpdate: Date.now(),
+            growthStages: [
+                { name: "Семечко", img: "🌱", growth: 0 },
+                { name: "Росток", img: "🌿", growth: 0.3 },
+                { name: "Растение", img: "🌾", growth: 0.7 },
+                { name: "Урожай", img: "🍅", growth: 1 }
+            ],
+            targetHarvest: 27,
             seeds: [
                 { id: 'carrot', name: 'Морковь', price: 10, growTime: 30, value: 5 },
                 { id: 'potato', name: 'Картофель', price: 15, growTime: 45, value: 8 },
                 { id: 'wheat', name: 'Пшеница', price: 20, growTime: 60, value: 12 }
             ],
             upgrades: [
-                { id: 'water-capacity', name: 'Бак для воды', price: 50, effect: 'Увеличивает запас воды на 2' },
-                { id: 'faster-growth', name: 'Удобрения', price: 100, effect: 'Растения растут на 20% быстрее' }
+                { id: 'water-capacity', name: 'Бак для воды', price: 50, effect: 'Увеличивает запас воды на 2', purchased: false },
+                { id: 'faster-growth', name: 'Удобрения', price: 100, effect: 'Растения растут на 20% быстрее', purchased: false }
             ],
             stats: {
                 totalHarvest: 0,
                 totalPlanted: 0,
                 totalWatered: 0,
                 playTime: 0
-            }
+            },
+            currentSeed: null
         };
 
-        // Новые функции
-        function openTab(tabName) {
-            // Скрыть все вкладки
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Показать выбранную вкладку
-            document.getElementById(tabName).classList.add('active');
-            
-            // Обновить активные табы
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-                if (tab.textContent.toLowerCase().includes(tabName)) {
-                    tab.classList.add('active');
+        // Элементы интерфейса
+        const farmEl = document.getElementById('farm-grid');
+        const waterCountEl = document.getElementById('water-count');
+        const harvestEl = document.getElementById('harvest');
+        const waterTimerEl = document.getElementById('water-timer');
+        const messageEl = document.getElementById('message');
+        const waterAllBtn = document.getElementById('water-all');
+        const resetBtn = document.getElementById('reset-btn');
+        const moneyDisplay = document.getElementById('money-display');
+        const seedShopEl = document.getElementById('seed-shop');
+        const upgradesListEl = document.getElementById('upgrades-list');
+        const statisticsEl = document.getElementById('statistics');
+
+        // Загрузка сохранения
+        function loadGame() {
+            const savedGame = localStorage.getItem('osoferm_pro_save');
+            if (savedGame) {
+                try {
+                    const parsed = JSON.parse(savedGame);
+                    
+                    // Восстанавливаем основные параметры
+                    game.water = parsed.water || 4;
+                    game.maxWater = parsed.maxWater || 4;
+                    game.harvest = parsed.harvest || 0;
+                    game.money = parsed.money || 100;
+                    game.experience = parsed.experience || 0;
+                    game.level = parsed.level || 1;
+                    game.waterTimer = parsed.waterTimer || 60;
+                    game.lastUpdate = parsed.lastUpdate || Date.now();
+                    game.currentSeed = parsed.currentSeed || null;
+                    
+                    // Восстанавливаем растения
+                    if (parsed.plants && parsed.plants.length === 9) {
+                        game.plants = parsed.plants;
+                    }
+                    
+                    // Восстанавливаем улучшения
+                    if (parsed.upgrades) {
+                        game.upgrades = parsed.upgrades;
+                    }
+                    
+                    // Восстанавливаем статистику
+                    if (parsed.stats) {
+                        game.stats = parsed.stats;
+                    }
+                    
+                    // Рассчитываем прошедшее время
+                    const timePassed = Math.floor((Date.now() - game.lastUpdate) / 1000);
+                    if (timePassed > 0) {
+                        // Восстанавливаем воду за прошедшее время
+                        const waterToAdd = Math.floor(timePassed / 60);
+                        game.water = Math.min(game.maxWater, game.water + waterToAdd);
+                        game.waterTimer = 60 - (timePassed % 60);
+                    }
+                    
+                    setTimeout(() => {
+                        showMessage("Добро пожаловать назад! Ваш прогресс загружен.");
+                    }, 1000);
+                } catch (e) {
+                    console.error("Ошибка загрузки:", e);
+                    initNewGame();
                 }
+            } else {
+                initNewGame();
+                setTimeout(() => {
+                    showMessage("Совет: Начните с посадки семян на грядках!");
+                }, 2000);
+            }
+            updateUI();
+        }
+
+        // Новая игра
+        function initNewGame() {
+            game.water = 4;
+            game.maxWater = 4;
+            game.harvest = 0;
+            game.money = 100;
+            game.experience = 0;
+            game.level = 1;
+            game.waterTimer = 60;
+            game.plants = Array(9).fill().map(() => ({ 
+                stage: -1, 
+                progress: 0,
+                type: null,
+                growthTime: 0
+            }));
+            game.lastUpdate = Date.now();
+            game.currentSeed = null;
+            game.upgrades.forEach(upgrade => upgrade.purchased = false);
+            game.stats = {
+                totalHarvest: 0,
+                totalPlanted: 0,
+                totalWatered: 0,
+                playTime: 0
+            };
+        }
+
+        // Сохранение игры
+        function saveGame() {
+            game.lastUpdate = Date.now();
+            const gameData = {
+                water: game.water,
+                maxWater: game.maxWater,
+                harvest: game.harvest,
+                money: game.money,
+                experience: game.experience,
+                level: game.level,
+                waterTimer: game.waterTimer,
+                lastUpdate: game.lastUpdate,
+                plants: game.plants,
+                upgrades: game.upgrades,
+                stats: game.stats,
+                currentSeed: game.currentSeed
+            };
+            localStorage.setItem('osoferm_pro_save', JSON.stringify(gameData));
+        }
+
+        // Создаем грядки
+        function createPlots() {
+            farmEl.innerHTML = '';
+            game.plants.forEach((plant, index) => {
+                const plot = document.createElement('div');
+                plot.className = 'plot';
+                plot.onclick = () => plantSeed(index);
+                farmEl.appendChild(plot);
+                plant.element = plot;
+                updatePlant(index);
             });
         }
 
+        // Инициализация магазина семян
         function initSeedShop() {
-            const shopEl = document.getElementById('seed-shop');
-            shopEl.innerHTML = '';
+            seedShopEl.innerHTML = '';
             
             game.seeds.forEach(seed => {
                 const seedEl = document.createElement('div');
@@ -657,54 +482,105 @@
                 seedEl.innerHTML = `
                     <h3>${seed.name}</h3>
                     <p>Цена: ${seed.price}💰</p>
-                    <p>Время роста: ${seed.growTime}сек</p>
+                    <p>Время роста: ${seed.growTime} сек</p>
                     <p>Доход: ${seed.value}💰</p>
-                    <button onclick="buySeed('${seed.id}')">Купить</button>
+                    <button onclick="selectSeed('${seed.id}')">Выбрать</button>
                 `;
-                shopEl.appendChild(seedEl);
+                seedShopEl.appendChild(seedEl);
             });
         }
 
-        function buySeed(seedId) {
-            // ... логика покупки семян ...
+        // Выбор семян
+        function selectSeed(seedId) {
+            const seed = game.seeds.find(s => s.id === seedId);
+            if (seed) {
+                game.currentSeed = seed;
+                showMessage(`Выбраны семена: ${seed.name}. Теперь кликните на грядку для посадки.`);
+                openTab('farm');
+            }
         }
 
-        function initUpgrades() {
-            // ... инициализация улучшений ...
+        // Посадить семечко
+        function plantSeed(index) {
+            if (game.currentSeed) {
+                if (game.plants[index].stage === -1) {
+                    if (game.money >= game.currentSeed.price) {
+                        game.money -= game.currentSeed.price;
+                        game.plants[index] = { 
+                            stage: 0, 
+                            progress: 0,
+                            type: game.currentSeed.id,
+                            growthTime: game.currentSeed.growTime,
+                            element: game.plants[index].element
+                        };
+                        game.stats.totalPlanted++;
+                        updatePlant(index);
+                        updateMoney();
+                        showMessage(`${game.currentSeed.name} посажена! Поливайте для роста.`);
+                        saveGame();
+                    } else {
+                        showMessage("Недостаточно денег для покупки этих семян!");
+                    }
+                } else if (game.plants[index].stage === 3) {
+                    harvestPlant(index);
+                }
+            } else {
+                showMessage("Сначала выберите семена в магазине!");
+                openTab('market');
+            }
         }
 
-        function updateStats() {
-            // ... обновление статистики ...
+        // Полить растение
+        function waterPlant(index) {
+            if (game.water > 0 && game.plants[index].stage !== -1 && game.plants[index].stage < 3) {
+                game.water--;
+                const growthSpeed = game.upgrades.find(u => u.id === 'faster-growth')?.purchased ? 1.2 : 1;
+                game.plants[index].progress += (0.2 + Math.random() * 0.1) * growthSpeed;
+                game.stats.totalWatered++;
+                
+                if (game.plants[index].progress >= 1) {
+                    game.plants[index].stage++;
+                    game.plants[index].progress = 0;
+                    const plantType = game.seeds.find(s => s.id === game.plants[index].type)?.name || 'Растение';
+                    showMessage(`${plantType} выросло до стадии "${game.growthStages[game.plants[index].stage].name}"!`);
+                }
+                
+                updateWater();
+                updatePlant(index);
+                saveGame();
+            }
         }
 
-        // Инициализация новой игры
-        function initNewGame() {
-            // ... расширенная инициализация ...
+        // Полить все растения
+        function waterAll() {
+            if (game.water > 0) {
+                for (let i = 0; i < game.plants.length; i++) {
+                    if (game.plants[i].stage !== -1 && game.plants[i].stage < 3) {
+                        waterPlant(i);
+                    }
+                }
+                showMessage("Все растения политы!");
+            }
         }
 
-        // Загрузка игры
-        function loadGame() {
-            // ... расширенная загрузка ...
+        // Анимация сбора урожая
+        function animateHarvest() {
+            harvestEl.classList.add('harvest-animation');
+            setTimeout(() => {
+                harvestEl.classList.remove('harvest-animation');
+            }, 500);
         }
 
-        // Инициализация при загрузке
-        window.onload = function() {
-            loadGame();
-            createPlots();
-            initSeedShop();
-            initUpgrades();
-            updateUI();
+        // Собрать урожай
+        function harvestPlant(index) {
+            const plant = game.plants[index];
+            const seed = game.seeds.find(s => s.id === plant.type);
             
-            // Запускаем игровой цикл
-            setInterval(gameLoop, 1000);
-        };
+            if (seed) {
+                const harvestAmount = 1;
+                game.harvest += harvestAmount;
+                game.money += seed.value;
+                game.experience += 5;
+                game.stats.totalHarvest++;
 
-        function gameLoop() {
-            updateWaterTimer();
-            updatePlants();
-            updateStats();
-            game.stats.playTime++;
-        }
-    </script>
-</body>
-</html>
+        
