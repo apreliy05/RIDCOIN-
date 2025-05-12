@@ -1,32 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+    <meta charset="UTF-8">
     <title>ОСОФЕРМ: Игра-ферма</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #e8f5e9;
+            background: url('https://i.imgur.com/jKa9bJ0.jpg') no-repeat center center fixed;
+            background-size: cover;
             margin: 0;
             padding: 20px;
             text-align: center;
         }
+
         #game-container {
-            max-width: 600px;
+            max-width: 700px;
             margin: 0 auto;
-            background: white;
+            background: rgba(255, 255, 255, 0.85);
             padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
         }
+
         h1 {
             color: #2e7d32;
         }
+
         .farm {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             margin: 20px 0;
         }
+
         .plot {
             height: 120px;
             background: #c8e6c9;
@@ -38,11 +44,13 @@
             position: relative;
             overflow: hidden;
         }
+
         .plant {
             width: 80px;
             height: 80px;
             transition: all 0.3s;
         }
+
         .progress-bar {
             position: absolute;
             bottom: 0;
@@ -51,7 +59,8 @@
             background: #388e3c;
             width: 0%;
         }
-        .water-btn, .fertilizer-btn, .upgrade-btn {
+
+        .water-btn {
             background: #2196f3;
             color: white;
             border: none;
@@ -61,21 +70,25 @@
             font-size: 16px;
             margin: 10px;
         }
-        .water-btn:disabled, .fertilizer-btn:disabled, .upgrade-btn:disabled {
+
+        .water-btn:disabled {
             background: #bbdefb;
             cursor: not-allowed;
         }
+
         .stats {
             display: flex;
             justify-content: space-around;
             margin: 20px 0;
         }
+
         .stat {
             background: #f1f8e9;
             padding: 10px;
             border-radius: 5px;
             min-width: 100px;
         }
+
         .message {
             margin: 15px 0;
             padding: 10px;
@@ -88,7 +101,7 @@
     <div id="game-container">
         <h1>ОСОФЕРМ</h1>
         <p>Соберите больше 2т, чтобы получить награду!</p>
-        
+
         <div class="stats">
             <div class="stat">
                 <div>💧 Вода</div>
@@ -99,23 +112,17 @@
                 <div id="harvest">0 г</div>
             </div>
             <div class="stat">
-                <div>🪙 Монеты</div>
-                <div id="coins">0</div>
-            </div>
-            <div class="stat">
                 <div>⏱️ Восстановление</div>
                 <div id="water-timer">00:01:00</div>
             </div>
         </div>
-        
+
         <button class="water-btn" id="water-all">Полить все (1 вода)</button>
-        <button class="fertilizer-btn" id="use-fertilizer" disabled>Использовать удобрение</button>
-        <button class="upgrade-btn" id="upgrade-farm" disabled>Улучшить ферму</button>
-        
+
         <div class="message" id="message">Нажмите на грядку, чтобы посадить растение!</div>
-        
+
         <div class="farm" id="farm">
-            <!-- Грядки будут созданы через JavaScript -->
+            <!-- Грядки создаются через JavaScript -->
         </div>
     </div>
 
@@ -124,34 +131,27 @@
             water: 4,
             maxWater: 4,
             harvest: 0,
-            coins: 0,
             plants: [],
-            waterTimer: 60, // 1 минута
+            waterTimer: 60,
             growthStages: [
                 { name: "Семечко", img: "🌱", growth: 0 },
                 { name: "Росток", img: "🌿", growth: 0.3 },
                 { name: "Растение", img: "🌾", growth: 0.7 },
                 { name: "Урожай", img: "🍅", growth: 1 }
-            ],
-            fertilizerAvailable: false,
-            upgradeAvailable: false,
+            ]
         };
 
         const farmEl = document.getElementById('farm');
         const waterCountEl = document.getElementById('water-count');
         const harvestEl = document.getElementById('harvest');
-        const coinsEl = document.getElementById('coins');
         const waterTimerEl = document.getElementById('water-timer');
         const messageEl = document.getElementById('message');
         const waterAllBtn = document.getElementById('water-all');
-        const fertilizerBtn = document.getElementById('use-fertilizer');
-        const upgradeBtn = document.getElementById('upgrade-farm');
 
-        // Создание грядок
         for (let i = 0; i < 9; i++) {
             const plot = document.createElement('div');
             plot.className = 'plot';
-            plot.innerHTML = '<div class="progress-bar"></div>';
+            plot.innerHTML = '<div class="progress-bar"></div><div>🪴</div>';
             plot.onclick = () => plantSeed(i);
             farmEl.appendChild(plot);
             game.plants.push({ stage: -1, progress: 0, element: plot });
@@ -159,7 +159,11 @@
 
         function plantSeed(index) {
             if (game.plants[index].stage === -1) {
-                game.plants[index] = { stage: 0, progress: 0, element: game.plants[index].element };
+                game.plants[index] = {
+                    stage: 0,
+                    progress: 0,
+                    element: game.plants[index].element
+                };
                 updatePlant(index);
                 showMessage("Семечко посажено! Поливайте для роста.");
             } else if (game.plants[index].stage === 3) {
@@ -173,6 +177,7 @@
                 game.plants[index].progress += 0.2 + Math.random() * 0.1;
                 updateWater();
                 updatePlant(index);
+
                 if (game.plants[index].progress >= 1) {
                     game.plants[index].stage++;
                     game.plants[index].progress = 0;
@@ -193,15 +198,14 @@
 
         function harvestPlant(index) {
             const plant = game.plants[index];
-            const harvestAmount = 300 + Math.floor(Math.random() * 200); // 300-500г
+            const harvestAmount = 300 + Math.floor(Math.random() * 200);
             game.harvest += harvestAmount;
-            game.coins += Math.floor(harvestAmount / 10); // За каждый урожай дается немного монет
             plant.stage = -1;
             plant.progress = 0;
             updatePlant(index);
             updateHarvest();
-            updateCoins();
             showMessage(`Собрано ${harvestAmount}г урожая!`);
+
             if (game.harvest >= 2000) {
                 showMessage("🎉 Поздравляем! Вы собрали 2т урожая и выиграли!");
             }
@@ -210,6 +214,7 @@
         function updatePlant(index) {
             const plant = game.plants[index];
             const plot = plant.element;
+
             if (plant.stage === -1) {
                 plot.innerHTML = '<div class="progress-bar"></div><div>🪴</div>';
             } else {
@@ -230,21 +235,19 @@
             harvestEl.textContent = `${game.harvest} г`;
         }
 
-        function updateCoins() {
-            coinsEl.textContent = game.coins;
-        }
-
         function showMessage(text) {
             messageEl.textContent = text;
         }
 
         function updateWaterTimer() {
             game.waterTimer--;
+
             if (game.waterTimer <= 0) {
                 game.water = Math.min(game.water + 1, game.maxWater);
                 game.waterTimer = 60;
                 updateWater();
             }
+
             const mins = Math.floor(game.waterTimer / 60);
             const secs = game.waterTimer % 60;
             waterTimerEl.textContent = `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -252,7 +255,6 @@
 
         waterAllBtn.onclick = waterAll;
         updateWater();
-
         setInterval(updateWaterTimer, 1000);
     </script>
 </body>
