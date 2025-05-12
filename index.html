@@ -1,289 +1,264 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Бизнес-Симулятор</title>
+    <title>ОСОФЕРМ: Игра-ферма</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
+            font-family: 'Arial', sans-serif;
+            background-color: #e8f5e9;
+            margin: 0;
             padding: 20px;
-        }
-        #game-container {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #2c3e50;
             text-align: center;
         }
-        .resource {
-            display: flex;
-            justify-content: space-between;
-            margin: 10px 0;
-            padding: 15px;
-            background: #ecf0f1;
-            border-radius: 5px;
-            font-size: 18px;
+        #game-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
         }
-        button {
-            background: #3498db;
+        h1 {
+            color: #2e7d32;
+        }
+        .farm {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .plot {
+            height: 120px;
+            background: #c8e6c9;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .plant {
+            width: 80px;
+            height: 80px;
+            transition: all 0.3s;
+        }
+        .progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            background: #388e3c;
+            width: 0%;
+        }
+        .water-btn {
+            background: #2196f3;
             color: white;
             border: none;
-            padding: 12px 20px;
-            margin: 8px 5px;
+            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            transition: background 0.3s;
+            margin: 10px;
         }
-        button:hover {
-            background: #2980b9;
-        }
-        button:disabled {
-            background: #bdc3c7;
+        .water-btn:disabled {
+            background: #bbdefb;
             cursor: not-allowed;
         }
-        .business {
-            border: 1px solid #ddd;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-            background: #f9f9f9;
-        }
-        #events {
+        .stats {
+            display: flex;
+            justify-content: space-around;
             margin: 20px 0;
-            padding: 15px;
-            background: #fffde7;
-            border-left: 4px solid #f39c12;
-            min-height: 20px;
         }
-        .progress-container {
-            width: 100%;
-            background: #e0e0e0;
+        .stat {
+            background: #f1f8e9;
+            padding: 10px;
             border-radius: 5px;
+            min-width: 100px;
+        }
+        .message {
             margin: 15px 0;
-        }
-        .progress-bar {
-            height: 20px;
-            background: #2ecc71;
+            padding: 10px;
+            background: #fff9c4;
             border-radius: 5px;
-            width: 0%;
-            transition: width 0.5s;
         }
     </style>
 </head>
 <body>
     <div id="game-container">
-        <h1>Бизнес-Симулятор</h1>
+        <h1>ОСОФЕРМ</h1>
+        <p>Соберите больше 2т, чтобы получить награду!</p>
         
-        <div class="resource">
-            <span>💰 Капитал:</span>
-            <span id="money">1,000,000 ₽</span>
-        </div>
-        <div class="resource">
-            <span>📈 Репутация:</span>
-            <span id="reputation">50%</span>
-        </div>
-        <div class="resource">
-            <span>👥 Сотрудники:</span>
-            <span id="employees">5</span>
-        </div>
-        
-        <div class="progress-container">
-            <div class="progress-bar" id="progress"></div>
-        </div>
-        
-        <div id="businesses">
-            <div class="business">
-                <h3>Магазин</h3>
-                <p>▸ Доход: <strong>5,000 ₽/месяц</strong></p>
-                <p>▸ Расходы: 1,000 ₽/месяц</p>
-                <p>▸ Стоимость: <strong>50,000 ₽</strong></p>
-                <button onclick="buyBusiness('shop')" id="shop-btn">Купить</button>
-                <span id="shop-owned">0</span> шт.
+        <div class="stats">
+            <div class="stat">
+                <div>💧 Вода</div>
+                <div id="water-count">4/4</div>
             </div>
-            
-            <div class="business">
-                <h3>Кафе</h3>
-                <p>▸ Доход: <strong>15,000 ₽/месяц</strong></p>
-                <p>▸ Расходы: 5,000 ₽/месяц</p>
-                <p>▸ Стоимость: <strong>200,000 ₽</strong></p>
-                <button onclick="buyBusiness('cafe')" id="cafe-btn">Купить</button>
-                <span id="cafe-owned">0</span> шт.
+            <div class="stat">
+                <div>🌱 Урожай</div>
+                <div id="harvest">0 г</div>
             </div>
-            
-            <div class="business">
-                <h3>IT-Компания</h3>
-                <p>▸ Доход: <strong>50,000 ₽/месяц</strong></p>
-                <p>▸ Расходы: 20,000 ₽/месяц</p>
-                <p>▸ Стоимость: <strong>1,000,000 ₽</strong></p>
-                <button onclick="buyBusiness('it')" id="it-btn">Купить</button>
-                <span id="it-owned">0</span> шт.
+            <div class="stat">
+                <div>⏱️ Восстановление</div>
+                <div id="water-timer">00:01:00</div>
             </div>
         </div>
         
-        <div>
-            <h3>Инвестиции</h3>
-            <button onclick="hireEmployee()">Нанять сотрудника (+5% эффективности)</button>
-            <span>Цена: 10,000 ₽</span>
-            <button onclick="investMarketing()">Маркетинг (+10% репутации)</button>
-            <span>Цена: 25,000 ₽</span>
-        </div>
+        <button class="water-btn" id="water-all">Полить все (1 вода)</button>
         
-        <div id="events"></div>
+        <div class="message" id="message">Нажмите на грядку, чтобы посадить растение!</div>
+        
+        <div class="farm" id="farm">
+            <!-- Грядки будут созданы через JavaScript -->
+        </div>
     </div>
 
     <script>
-        // Игровые данные
+        // Состояние игры
         const game = {
-            money: 1000000,
-            reputation: 50,
-            employees: 5,
-            month: 0,
-            businesses: {
-                shop: { owned: 0, income: 5000, cost: 1000, price: 50000 },
-                cafe: { owned: 0, income: 15000, cost: 5000, price: 200000 },
-                it: { owned: 0, income: 50000, cost: 20000, price: 1000000 }
-            },
-            events: [
-                { 
-                    text: "📉 Кризис! Доходы -20% в этом месяце", 
-                    effect: () => modifyIncome(0.8) 
-                },
-                { 
-                    text: "📈 Бум! Доходы +30% в этом месяце", 
-                    effect: () => modifyIncome(1.3) 
-                },
-                { 
-                    text: "💡 Инновация! Получено 200,000 ₽", 
-                    effect: () => { game.money += 200000; updateUI(); } 
-                },
-                { 
-                    text: "🏆 Награда! Репутация +15%", 
-                    effect: () => { game.reputation = Math.min(100, game.reputation + 15); updateUI(); } 
-                }
+            water: 4,
+            maxWater: 4,
+            harvest: 0,
+            plants: [],
+            waterTimer: 60, // 1 минута
+            growthStages: [
+                { name: "Семечко", img: "🌱", growth: 0 },
+                { name: "Росток", img: "🌿", growth: 0.3 },
+                { name: "Растение", img: "🌾", growth: 0.7 },
+                { name: "Урожай", img: "🍅", growth: 1 }
             ]
         };
 
-        // Основные функции
-        function updateUI() {
-            // Обновляем ресурсы
-            document.getElementById('money').textContent = formatMoney(game.money) + ' ₽';
-            document.getElementById('reputation').textContent = Math.round(game.reputation) + '%';
-            document.getElementById('employees').textContent = game.employees;
-            
-            // Обновляем бизнесы
-            document.getElementById('shop-owned').textContent = game.businesses.shop.owned;
-            document.getElementById('cafe-owned').textContent = game.businesses.cafe.owned;
-            document.getElementById('it-owned').textContent = game.businesses.it.owned;
-            
-            // Прогресс месяца
-            document.getElementById('progress').style.width = (game.month % 30 / 30 * 100) + '%';
-            
-            // Кнопки
-            document.getElementById('shop-btn').disabled = game.money < game.businesses.shop.price;
-            document.getElementById('cafe-btn').disabled = game.money < game.businesses.cafe.price;
-            document.getElementById('it-btn').disabled = game.money < game.businesses.it.price;
+        // Элементы интерфейса
+        const farmEl = document.getElementById('farm');
+        const waterCountEl = document.getElementById('water-count');
+        const harvestEl = document.getElementById('harvest');
+        const waterTimerEl = document.getElementById('water-timer');
+        const messageEl = document.getElementById('message');
+        const waterAllBtn = document.getElementById('water-all');
+
+        // Создаем грядки
+        for (let i = 0; i < 9; i++) {
+            const plot = document.createElement('div');
+            plot.className = 'plot';
+            plot.innerHTML = '<div class="progress-bar"></div>';
+            plot.onclick = () => plantSeed(i);
+            farmEl.appendChild(plot);
+            game.plants.push({ stage: -1, progress: 0, element: plot });
         }
 
-        function formatMoney(amount) {
-            return amount.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
-
-        function buyBusiness(type) {
-            const biz = game.businesses[type];
-            if (game.money >= biz.price) {
-                game.money -= biz.price;
-                biz.owned++;
-                showMessage(`Приобретен ${type === 'shop' ? 'магазин' : type === 'cafe' ? 'кафе' : 'IT-бизнес'}!`);
-                updateUI();
+        // Посадить семечко
+        function plantSeed(index) {
+            if (game.plants[index].stage === -1) {
+                game.plants[index] = { 
+                    stage: 0, 
+                    progress: 0, 
+                    element: game.plants[index].element 
+                };
+                updatePlant(index);
+                showMessage("Семечко посажено! Поливайте для роста.");
+            } else if (game.plants[index].stage === 3) {
+                harvestPlant(index);
             }
         }
 
-        function hireEmployee() {
-            if (game.money >= 10000) {
-                game.money -= 10000;
-                game.employees++;
-                showMessage("Новый сотрудник нанят! Эффективность +5%");
-                updateUI();
+        // Полить растение
+        function waterPlant(index) {
+            if (game.water > 0 && game.plants[index].stage !== -1 && game.plants[index].stage < 3) {
+                game.water--;
+                game.plants[index].progress += 0.2 + Math.random() * 0.1;
+                updateWater();
+                updatePlant(index);
+                
+                if (game.plants[index].progress >= 1) {
+                    game.plants[index].stage++;
+                    game.plants[index].progress = 0;
+                }
             }
         }
 
-        function investMarketing() {
-            if (game.money >= 25000) {
-                game.money -= 25000;
-                game.reputation = Math.min(100, game.reputation + 10);
-                showMessage("Маркетинговая кампания успешна!");
-                updateUI();
+        // Полить все растения
+        function waterAll() {
+            if (game.water > 0) {
+                for (let i = 0; i < game.plants.length; i++) {
+                    if (game.plants[i].stage !== -1 && game.plants[i].stage < 3) {
+                        waterPlant(i);
+                    }
+                }
+                showMessage("Все растения политы!");
             }
         }
 
-        function modifyIncome(multiplier) {
-            Object.values(game.businesses).forEach(b => {
-                b.income *= multiplier;
-            });
-        }
-
-        function randomEvent() {
-            if (Math.random() < 0.3 && game.month > 0) {
-                const event = game.events[Math.floor(Math.random() * game.events.length)];
-                showEvent(event.text);
-                event.effect();
-            }
-        }
-
-        function showMessage(text) {
-            const eventDiv = document.getElementById('events');
-            eventDiv.innerHTML = `<p>${text}</p>`;
-            setTimeout(() => eventDiv.innerHTML = '', 3000);
-        }
-
-        function showEvent(text) {
-            const eventDiv = document.getElementById('events');
-            eventDiv.innerHTML = `<p><strong>СОБЫТИЕ:</strong> ${text}</p>`;
-            setTimeout(() => eventDiv.innerHTML = '', 5000);
-        }
-
-        // Игровой цикл
-        setInterval(() => {
-            game.month++;
-            
-            // Расчет доходов
-            let income = 0;
-            let expenses = 0;
-            
-            Object.values(game.businesses).forEach(b => {
-                income += b.owned * b.income * (1 + game.employees * 0.05) * (game.reputation / 100);
-                expenses += b.owned * b.cost;
-            });
-            
-            game.money += income - expenses;
-            
-            // События
-            if (game.month % 3 === 0) randomEvent();
-            
-            // Постепенное снижение репутации
-            if (game.month % 5 === 0) {
-                game.reputation = Math.max(10, game.reputation - 2);
-            }
-            
-            updateUI();
+        // Собрать урожай
+        function harvestPlant(index) {
+            const plant = game.plants[index];
+            const harvestAmount = 300 + Math.floor(Math.random() * 200); // 300-500г
+            game.harvest += harvestAmount;
+            plant.stage = -1;
+            plant.progress = 0;
+            updatePlant(index);
+            updateHarvest();
+            showMessage(`Собрано ${harvestAmount}г урожая!`);
             
             // Проверка победы
-            if (game.money >= 10000000) {
-                showEvent("🎉 ПОБЕДА! Ваш капитал достиг 10,000,000 ₽!");
-                clearInterval(gameInterval);
+            if (game.harvest >= 2000) {
+                showMessage("🎉 Поздравляем! Вы собрали 2т урожая и выиграли!");
+            }
+        }
+
+        // Обновить отображение растения
+        function updatePlant(index) {
+            const plant = game.plants[index];
+            const plot = plant.element;
+            
+            if (plant.stage === -1) {
+                plot.innerHTML = '<div class="progress-bar"></div><div>🪴</div>';
+            } else {
+                const stage = game.growthStages[plant.stage];
+                plot.innerHTML = `
+                    <div class="progress-bar" style="width:${plant.progress * 100}%"></div>
+                    <div class="plant">${stage.img}</div>
+                `;
+            }
+        }
+
+        // Обновить счетчик воды
+        function updateWater() {
+            waterCountEl.textContent = `${game.water}/${game.maxWater}`;
+            waterAllBtn.disabled = game.water === 0;
+        }
+
+        // Обновить счетчик урожая
+        function updateHarvest() {
+            harvestEl.textContent = `${game.harvest} г`;
+        }
+
+        // Показать сообщение
+        function showMessage(text) {
+            messageEl.textContent = text;
+        }
+
+        // Таймер восстановления воды
+        function updateWaterTimer() {
+            game.waterTimer--;
+            
+            if (game.waterTimer <= 0) {
+                game.water = Math.min(game.water + 1, game.maxWater);
+                game.waterTimer = 60;
+                updateWater();
             }
             
-        }, 1000);
+            const mins = Math.floor(game.waterTimer / 60);
+            const secs = game.waterTimer % 60;
+            waterTimerEl.textContent = `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
 
-        // Инициализация
-        updateUI();
+        // Назначение кнопок
+        waterAllBtn.onclick = waterAll;
+        updateWater();
+
+        // Игровой цикл
+        setInterval(updateWaterTimer, 1000);
     </script>
 </body>
 </html>
