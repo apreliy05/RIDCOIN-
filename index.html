@@ -138,6 +138,33 @@
             background: linear-gradient(to bottom, #e74c3c, #c0392b);
             margin-top: 10px;
         }
+        .harvest-animation {
+            animation: harvestPulse 0.5s;
+        }
+        @keyframes harvestPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); color: #e67e22; }
+            100% { transform: scale(1); }
+        }
+        
+        /* Для мобильных устройств */
+        @media (max-width: 600px) {
+            .farm {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .stat {
+                min-width: 80px;
+                font-size: 14px;
+            }
+            #game-container {
+                padding: 15px;
+                margin: 10px;
+            }
+            .water-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -227,13 +254,18 @@
                         game.plants = parsed.plants;
                     }
                     
-                    showMessage("Прогресс загружен!");
+                    setTimeout(() => {
+                        showMessage("Добро пожаловать назад! Ваш прогресс загружен.");
+                    }, 1000);
                 } catch (e) {
                     console.error("Ошибка загрузки:", e);
                     initNewGame();
                 }
             } else {
                 initNewGame();
+                setTimeout(() => {
+                    showMessage("Совет: Начните с посадки семян на грядках!");
+                }, 2000);
             }
             updateUI();
         }
@@ -316,10 +348,22 @@
             }
         }
 
+        // Анимация сбора урожая
+        function animateHarvest() {
+            harvestEl.classList.add('harvest-animation');
+            setTimeout(() => {
+                harvestEl.classList.remove('harvest-animation');
+            }, 500);
+        }
+
         // Собрать урожай
         function harvestPlant(index) {
             const harvestAmount = 1;
             game.harvest += harvestAmount;
+            
+            // Анимация
+            animateHarvest();
+            
             game.plants[index].stage = -1;
             game.plants[index].progress = 0;
             
