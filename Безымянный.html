@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Угадай число</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f4f4f4;
+      text-align: center;
+    }
+    input, button {
+      font-size: 16px;
+      padding: 8px;
+      margin: 5px;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Угадай число от 1 до 100</h1>
+  <input type="number" id="guessInput" placeholder="Введите число" />
+  <button onclick="checkGuess()">Проверить</button>
+  <button onclick="restartGame()">Сначала</button>
+  <p id="result"></p>
+
+  <script>
+    let secretNumber = Math.floor(Math.random() * 100) + 1;
+    let attempts = 0;
+
+    function checkGuess() {
+      const guess = Number(document.getElementById('guessInput').value);
+      attempts++;
+
+      let resultText = '';
+      if (guess < secretNumber) {
+        resultText = 'Слишком маленькое число.';
+      } else if (guess > secretNumber) {
+        resultText = 'Слишком большое число.';
+      } else {
+        resultText = `Поздравляю! Ты угадал число ${secretNumber} за ${attempts} попыток.`;
+      }
+
+      document.getElementById('result').textContent = resultText;
+    }
+
+    function restartGame() {
+      secretNumber = Math.floor(Math.random() * 100) + 1;
+      attempts = 0;
+      document.getElementById('guessInput').value = '';
+      document.getElementById('result').textContent = '';
+    }
+  </script>
+</body>
+</html>
