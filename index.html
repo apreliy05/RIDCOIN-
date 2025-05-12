@@ -51,7 +51,7 @@
             background: #388e3c;
             width: 0%;
         }
-        .water-btn {
+        .water-btn, .fertilizer-btn, .upgrade-btn {
             background: #2196f3;
             color: white;
             border: none;
@@ -61,7 +61,7 @@
             font-size: 16px;
             margin: 10px;
         }
-        .water-btn:disabled {
+        .water-btn:disabled, .fertilizer-btn:disabled, .upgrade-btn:disabled {
             background: #bbdefb;
             cursor: not-allowed;
         }
@@ -99,12 +99,18 @@
                 <div id="harvest">0 г</div>
             </div>
             <div class="stat">
+                <div>🪙 Монеты</div>
+                <div id="coins">0</div>
+            </div>
+            <div class="stat">
                 <div>⏱️ Восстановление</div>
                 <div id="water-timer">00:01:00</div>
             </div>
         </div>
         
         <button class="water-btn" id="water-all">Полить все (1 вода)</button>
+        <button class="fertilizer-btn" id="use-fertilizer" disabled>Использовать удобрение</button>
+        <button class="upgrade-btn" id="upgrade-farm" disabled>Улучшить ферму</button>
         
         <div class="message" id="message">Нажмите на грядку, чтобы посадить растение!</div>
         
@@ -114,11 +120,11 @@
     </div>
 
     <script>
-        // Состояние игры
         const game = {
             water: 4,
             maxWater: 4,
             harvest: 0,
+            coins: 0,
             plants: [],
             waterTimer: 60, // 1 минута
             growthStages: [
@@ -126,18 +132,22 @@
                 { name: "Росток", img: "🌿", growth: 0.3 },
                 { name: "Растение", img: "🌾", growth: 0.7 },
                 { name: "Урожай", img: "🍅", growth: 1 }
-            ]
+            ],
+            fertilizerAvailable: false,
+            upgradeAvailable: false,
         };
 
-        // Элементы интерфейса
         const farmEl = document.getElementById('farm');
         const waterCountEl = document.getElementById('water-count');
         const harvestEl = document.getElementById('harvest');
+        const coinsEl = document.getElementById('coins');
         const waterTimerEl = document.getElementById('water-timer');
         const messageEl = document.getElementById('message');
         const waterAllBtn = document.getElementById('water-all');
+        const fertilizerBtn = document.getElementById('use-fertilizer');
+        const upgradeBtn = document.getElementById('upgrade-farm');
 
-        // Создаем грядки
+        // Создание грядок
         for (let i = 0; i < 9; i++) {
             const plot = document.createElement('div');
             plot.className = 'plot';
@@ -147,14 +157,9 @@
             game.plants.push({ stage: -1, progress: 0, element: plot });
         }
 
-        // Посадить семечко
         function plantSeed(index) {
             if (game.plants[index].stage === -1) {
-                game.plants[index] = { 
-                    stage: 0, 
-                    progress: 0, 
-                    element: game.plants[index].element 
-                };
+                game.plants[index] = { stage: 0, progress: 0, element: game.plants[index].element };
                 updatePlant(index);
                 showMessage("Семечко посажено! Поливайте для роста.");
             } else if (game.plants[index].stage === 3) {
@@ -162,14 +167,12 @@
             }
         }
 
-        // Полить растение
         function waterPlant(index) {
             if (game.water > 0 && game.plants[index].stage !== -1 && game.plants[index].stage < 3) {
                 game.water--;
                 game.plants[index].progress += 0.2 + Math.random() * 0.1;
                 updateWater();
                 updatePlant(index);
-                
                 if (game.plants[index].progress >= 1) {
                     game.plants[index].stage++;
                     game.plants[index].progress = 0;
@@ -177,7 +180,6 @@
             }
         }
 
-        // Полить все растения
         function waterAll() {
             if (game.water > 0) {
                 for (let i = 0; i < game.plants.length; i++) {
@@ -189,28 +191,25 @@
             }
         }
 
-        // Собрать урожай
         function harvestPlant(index) {
             const plant = game.plants[index];
             const harvestAmount = 300 + Math.floor(Math.random() * 200); // 300-500г
             game.harvest += harvestAmount;
+            game.coins += Math.floor(harvestAmount / 10); // За каждый урожай дается немного монет
             plant.stage = -1;
             plant.progress = 0;
             updatePlant(index);
             updateHarvest();
+            updateCoins();
             showMessage(`Собрано ${harvestAmount}г урожая!`);
-            
-            // Проверка победы
             if (game.harvest >= 2000) {
                 showMessage("🎉 Поздравляем! Вы собрали 2т урожая и выиграли!");
             }
         }
 
-        // Обновить отображение растения
         function updatePlant(index) {
             const plant = game.plants[index];
             const plot = plant.element;
-            
             if (plant.stage === -1) {
                 plot.innerHTML = '<div class="progress-bar"></div><div>🪴</div>';
             } else {
@@ -222,42 +221,38 @@
             }
         }
 
-        // Обновить счетчик воды
         function updateWater() {
             waterCountEl.textContent = `${game.water}/${game.maxWater}`;
             waterAllBtn.disabled = game.water === 0;
         }
 
-        // Обновить счетчик урожая
         function updateHarvest() {
             harvestEl.textContent = `${game.harvest} г`;
         }
 
-        // Показать сообщение
+        function updateCoins() {
+            coinsEl.textContent = game.coins;
+        }
+
         function showMessage(text) {
             messageEl.textContent = text;
         }
 
-        // Таймер восстановления воды
         function updateWaterTimer() {
             game.waterTimer--;
-            
             if (game.waterTimer <= 0) {
                 game.water = Math.min(game.water + 1, game.maxWater);
                 game.waterTimer = 60;
                 updateWater();
             }
-            
             const mins = Math.floor(game.waterTimer / 60);
             const secs = game.waterTimer % 60;
             waterTimerEl.textContent = `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
         }
 
-        // Назначение кнопок
         waterAllBtn.onclick = waterAll;
         updateWater();
 
-        // Игровой цикл
         setInterval(updateWaterTimer, 1000);
     </script>
 </body>
