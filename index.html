@@ -2,260 +2,160 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>ОСОФЕРМ: Игра-ферма</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бизнес-симулятор Пчеловода</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background: url('https://i.imgur.com/jKa9bJ0.jpg') no-repeat center center fixed;
-            background-size: cover;
+            font-family: sans-serif;
             margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        header, main, footer {
             padding: 20px;
-            text-align: center;
+            margin: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
-        #game-container {
-            max-width: 700px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.85);
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-        }
-
-        h1 {
-            color: #2e7d32;
-        }
-
-        .farm {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .plot {
-            height: 120px;
-            background: #c8e6c9;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .plant {
-            width: 80px;
-            height: 80px;
-            transition: all 0.3s;
-        }
-
-        .progress-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 5px;
-            background: #388e3c;
-            width: 0%;
-        }
-
-        .water-btn {
-            background: #2196f3;
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
-            margin: 10px;
+            margin-right: 10px;
         }
 
-        .water-btn:disabled {
-            background: #bbdefb;
-            cursor: not-allowed;
+        button:hover {
+            background-color: #3e8e41;
         }
 
-        .stats {
-            display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
+        #event-log {
+            list-style-type: none;
+            padding: 0;
         }
 
-        .stat {
-            background: #f1f8e9;
-            padding: 10px;
-            border-radius: 5px;
-            min-width: 100px;
-        }
-
-        .message {
-            margin: 15px 0;
-            padding: 10px;
-            background: #fff9c4;
-            border-radius: 5px;
+        #event-log li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
         }
     </style>
 </head>
 <body>
-    <div id="game-container">
-        <h1>ОСОФЕРМ</h1>
-        <p>Соберите больше 2т, чтобы получить награду!</p>
 
-        <div class="stats">
-            <div class="stat">
-                <div>💧 Вода</div>
-                <div id="water-count">4/4</div>
-            </div>
-            <div class="stat">
-                <div>🌱 Урожай</div>
-                <div id="harvest">0 г</div>
-            </div>
-            <div class="stat">
-                <div>⏱️ Восстановление</div>
-                <div id="water-timer">00:01:00</div>
-            </div>
-        </div>
+    <header>
+        <h1>Бизнес-симулятор Пчеловода</h1>
+    </header>
 
-        <button class="water-btn" id="water-all">Полить все (1 вода)</button>
+    <main>
+        <section id="stats">
+            <h2>Статистика</h2>
+            <p>Деньги: <span id="money">100</span></p>
+            <p>Ульи: <span id="hives">0</span></p>
+            <p>Пчелы: <span id="bees">0</span></p>
+            <p>Мед: <span id="honey">0</span> кг</p>
+        </section>
 
-        <div class="message" id="message">Нажмите на грядку, чтобы посадить растение!</div>
+        <section id="actions">
+            <h2>Действия</h2>
+            <button id="buy-hive">Купить улей (Цена: 50)</button>
+            <button id="collect-honey">Собрать мед</button>
+            <button id="sell-honey">Продать мед (Цена: 10 за кг)</button>
+            <button id="buy-bees">Купить пчел (Цена: 10)</button>
+        </section>
 
-        <div class="farm" id="farm">
-            <!-- Грядки создаются через JavaScript -->
-        </div>
-    </div>
+        <section id="events">
+            <h2>События</h2>
+            <ul id="event-log">
+                <li>Добро пожаловать в симулятор пчеловода!</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2023 Бизнес-симулятор Пчеловода</p>
+    </footer>
 
     <script>
-        const game = {
-            water: 4,
-            maxWater: 4,
-            harvest: 0,
-            plants: [],
-            waterTimer: 60,
-            growthStages: [
-                { name: "Семечко", img: "🌱", growth: 0 },
-                { name: "Росток", img: "🌿", growth: 0.3 },
-                { name: "Растение", img: "🌾", growth: 0.7 },
-                { name: "Урожай", img: "🍅", growth: 1 }
-            ]
-        };
+        //  Инициализация переменных
+        let money = 100;
+        let hives = 0;
+        let bees = 0;
+        let honey = 0;
 
-        const farmEl = document.getElementById('farm');
-        const waterCountEl = document.getElementById('water-count');
-        const harvestEl = document.getElementById('harvest');
-        const waterTimerEl = document.getElementById('water-timer');
-        const messageEl = document.getElementById('message');
-        const waterAllBtn = document.getElementById('water-all');
+        //  Получение элементов DOM
+        const moneySpan = document.getElementById("money");
+        const hivesSpan = document.getElementById("hives");
+        const beesSpan = document.getElementById("bees");
+        const honeySpan = document.getElementById("honey");
+        const buyHiveButton = document.getElementById("buy-hive");
+        const collectHoneyButton = document.getElementById("collect-honey");
+        const sellHoneyButton = document.getElementById("sell-honey");
+        const buyBeesButton = document.getElementById("buy-bees");
+        const eventLog = document.getElementById("event-log");
 
-        for (let i = 0; i < 9; i++) {
-            const plot = document.createElement('div');
-            plot.className = 'plot';
-            plot.innerHTML = '<div class="progress-bar"></div><div>🪴</div>';
-            plot.onclick = () => plantSeed(i);
-            farmEl.appendChild(plot);
-            game.plants.push({ stage: -1, progress: 0, element: plot });
+        //  Функция для обновления статистики на странице
+        function updateStats() {
+            moneySpan.textContent = money;
+            hivesSpan.textContent = hives;
+            beesSpan.textContent = bees;
+            honeySpan.textContent = honey;
         }
 
-        function plantSeed(index) {
-            if (game.plants[index].stage === -1) {
-                game.plants[index] = {
-                    stage: 0,
-                    progress: 0,
-                    element: game.plants[index].element
-                };
-                updatePlant(index);
-                showMessage("Семечко посажено! Поливайте для роста.");
-            } else if (game.plants[index].stage === 3) {
-                harvestPlant(index);
-            }
+        //  Функция для добавления события в лог
+        function logEvent(message) {
+            const li = document.createElement("li");
+            li.textContent = message;
+            eventLog.appendChild(li);
         }
 
-        function waterPlant(index) {
-            if (game.water > 0 && game.plants[index].stage !== -1 && game.plants[index].stage < 3) {
-                game.water--;
-                game.plants[index].progress += 0.2 + Math.random() * 0.1;
-                updateWater();
-                updatePlant(index);
-
-                if (game.plants[index].progress >= 1) {
-                    game.plants[index].stage++;
-                    game.plants[index].progress = 0;
-                }
-            }
-        }
-
-        function waterAll() {
-            if (game.water > 0) {
-                for (let i = 0; i < game.plants.length; i++) {
-                    if (game.plants[i].stage !== -1 && game.plants[i].stage < 3) {
-                        waterPlant(i);
-                    }
-                }
-                showMessage("Все растения политы!");
-            }
-        }
-
-        function harvestPlant(index) {
-            const plant = game.plants[index];
-            const harvestAmount = 300 + Math.floor(Math.random() * 200);
-            game.harvest += harvestAmount;
-            plant.stage = -1;
-            plant.progress = 0;
-            updatePlant(index);
-            updateHarvest();
-            showMessage(`Собрано ${harvestAmount}г урожая!`);
-
-            if (game.harvest >= 2000) {
-                showMessage("🎉 Поздравляем! Вы собрали 2т урожая и выиграли!");
-            }
-        }
-
-        function updatePlant(index) {
-            const plant = game.plants[index];
-            const plot = plant.element;
-
-            if (plant.stage === -1) {
-                plot.innerHTML = '<div class="progress-bar"></div><div>🪴</div>';
+        //  Обработчики событий для кнопок
+        buyHiveButton.addEventListener("click", () => {
+            if (money >= 50) {
+                money -= 50;
+                hives++;
+                logEvent("Куплен новый улей!");
+                updateStats();
             } else {
-                const stage = game.growthStages[plant.stage];
-                plot.innerHTML = `
-                    <div class="progress-bar" style="width:${plant.progress * 100}%"></div>
-                    <div class="plant">${stage.img}</div>
-                `;
+                logEvent("Недостаточно денег для покупки улья.");
             }
-        }
+        });
 
-        function updateWater() {
-            waterCountEl.textContent = `${game.water}/${game.maxWater}`;
-            waterAllBtn.disabled = game.water === 0;
-        }
+        collectHoneyButton.addEventListener("click", () => {
+            //  Предположим, каждый улей производит 5 кг меда
+            const collectedHoney = hives * 5;
+            honey += collectedHoney;
+            logEvent(`Собрано ${collectedHoney} кг меда.`);
+            updateStats();
+        });
 
-        function updateHarvest() {
-            harvestEl.textContent = `${game.harvest} г`;
-        }
+        sellHoneyButton.addEventListener("click", () => {
+            const earnings = honey * 10;
+            money += earnings;
+            honey = 0;
+            logEvent(`Продано ${honey} кг меда за ${earnings} денег.`);
+            updateStats();
+        });
 
-        function showMessage(text) {
-            messageEl.textContent = text;
-        }
-
-        function updateWaterTimer() {
-            game.waterTimer--;
-
-            if (game.waterTimer <= 0) {
-                game.water = Math.min(game.water + 1, game.maxWater);
-                game.waterTimer = 60;
-                updateWater();
+        buyBeesButton.addEventListener("click", () => {
+            if (money >= 10) {
+                money -= 10;
+                bees++;
+                logEvent("Куплена новая пчела!");
+                updateStats();
+            } else {
+                logEvent("Недостаточно денег для покупки пчелы.");
             }
+        });
 
-            const mins = Math.floor(game.waterTimer / 60);
-            const secs = game.waterTimer % 60;
-            waterTimerEl.textContent = `00:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
+        //  Первоначальное обновление статистики
+        updateStats();
 
-        waterAllBtn.onclick = waterAll;
-        updateWater();
-        setInterval(updateWaterTimer, 1000);
     </script>
+
 </body>
 </html>
