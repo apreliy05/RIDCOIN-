@@ -3,206 +3,307 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Гнев Проклятых (Wrath of the Forsaken)</title>
+    <title>Фермерская игра</title>
     <style>
         body {
-            margin: 0;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to bottom, #ffeb3b, #ff9800); /* Яркий солнечный градиент */
+            background-size: cover;
+            color: black;
+            transition: background 1s ease-in-out;
             overflow: hidden;
-            background-color: #000;
-            color: #c00;
-            font-family: 'Courier New', monospace;
         }
-        #gameCanvas {
-            display: block;
-            background-color: #111;
+        #game-container {
+            border: 2px solid #4caf50;
+            padding: 20px;
+            margin: 20px auto;
+            width: 300px;
+            background-color: white;
+            transition: transform 0.3s ease-in-out;
         }
-        #ui {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            padding: 5px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid #300;
+        button {
+            padding: 10px;
+            margin: 5px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
-        #sinMeter {
-            height: 20px;
-            width: 200px;
-            background: #222;
-            margin-top: 5px;
+        button:hover {
+            background-color: #45a049;
         }
-        #sinBar {
+
+        /* Анимация солнечных лучей */
+        .sun-rays {
+            position: fixed;
+            width: 100%;
             height: 100%;
-            width: 0%;
-            background: linear-gradient(to right, #500, #f00);
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 20%, rgba(255,255,255,0) 80%);
+            animation: shine 5s infinite alternate;
+        }
+
+        /* Плавное мерцание солнца */
+        @keyframes shine {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-    
-    <div id="ui">
-        <div>Грехи: <span id="sinCounter">0</span>/100</div>
-        <div id="sinMeter"><div id="sinBar"></div></div>
-        <div>Здоровье: <span id="health">100</span></div>
+    <h1>Фермерская игра 🌞🔥</h1>
+    <audio id="music" loop>
+        <source src="farm_music.mp3" type="audio/mpeg">
+    </audio>
+    <div class="sun-rays"></div> <!-- Эффект солнечных лучей -->
+    <div id="game-container">
+        <p>Ресурсы: <span id="resources">100</span> монет</p>
+        <p>Урожай: <span id="crops">0</span></p>
+        <p>Животные: Коров <span id="cows">0</span>, Кур <span id="chickens">0</span></p>
+        <button onclick="playMusic()">🎵 Включить музыку</button>
+        <button onclick="plant()">🌱 Посадить растение (-10 монет)</button>
+        <button onclick="harvest()">🌾 Собрать урожай (+20 монет)</button>
+        <button onclick="buyCow()">🐮 Купить корову (-30 монет)</button>
+        <button onclick="buyChicken()">🐔 Купить курицу (-15 монет)</button>
+        <button onclick="sell()">💰 Продать продукцию (+30 монет)</button>
+        <p id="status">Ожидание действий...</p>
     </div>
 
     <script>
-        // Настройки игры
-        const config = {
-            playerSpeed: 5,
-            enemySpawnRate: 120 // кадры между спавном врагов
-        };
+        let resources = 100;
+        let crops = 0;
+        let cows = 0;
+        let chickens = 0;
+        let music = document.getElementById("music");
 
-        // Инициализация
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-
-        // Игрок
-        const player = {
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            size: 40,
-            color: '#c00',
-            health: 100,
-            sins: 0
-        };
-
-        // Враги
-        let enemies = [];
-
-        // Управление
-        const keys = {
-            a: false, d: false,
-            w: false, s: false
-        };
-
-        // Слушатели клавиш
-        window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = true;
-        });
-        window.addEventListener('keyup', (e) => {
-            if (e.key.toLowerCase() in keys) keys[e.key.toLowerCase()] = false;
-        });
-
-        // Игровой цикл
-        let frameCount = 0;
-        function gameLoop() {
-            // Очистка экрана
-            ctx.fillStyle = '#111';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Движение игрока
-            if (keys.a) player.x -= config.playerSpeed;
-            if (keys.d) player.x += config.playerSpeed;
-            if (keys.w) player.y -= config.playerSpeed;
-            if (keys.s) player.y += config.playerSpeed;
-
-            // Ограничение в пределах экрана
-            player.x = Math.max(0, Math.min(canvas.width - player.size, player.x));
-            player.y = Math.max(0, Math.min(canvas.height - player.size, player.y));
-
-            // Спавн врагов
-            frameCount++;
-            if (frameCount % config.enemySpawnRate === 0) {
-                spawnEnemy();
-            }
-
-            // Отрисовка игрока
-            ctx.fillStyle = player.color;
-            ctx.fillRect(player.x, player.y, player.size, player.size);
-
-            // Отрисовка врагов
-            enemies.forEach(enemy => {
-                ctx.fillStyle = '#0c0';
-                ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
-                
-                // Движение к игроку
-                const dx = player.x - enemy.x;
-                const dy = player.y - enemy.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                
-                if (dist > 0) {
-                    enemy.x += dx / dist * enemy.speed;
-                    enemy.y += dy / dist * enemy.speed;
-                }
-
-                // Коллизия с игроком
-                if (dist < player.size / 2 + enemy.size / 2) {
-                    player.health -= 5;
-                    document.getElementById('health').textContent = player.health;
-                    enemies = enemies.filter(e => e !== enemy);
-                }
-            });
-
-            // Обновление UI
-            document.getElementById('sinCounter').textContent = player.sins;
-            document.getElementById('sinBar').style.width = `${player.sins}%`;
-
-            // Проверка поражения
-            if (player.health <= 0) {
-                alert('Вы пали... Но новый Палач продолжит ваш путь.');
-                resetGame();
-            }
-
-            if (player.sins >= 100) {
-                alert('Грехи поглотили вас! Вы стали новым Уродом...');
-                resetGame();
-            }
-
-            requestAnimationFrame(gameLoop);
+        function playMusic() {
+            music.play();
+            updateUI("Музыка включена! 🎵");
         }
 
-        function spawnEnemy() {
-            const side = Math.floor(Math.random() * 4);
-            let x, y;
-            
-            switch(side) {
-                case 0: x = 0; y = Math.random() * canvas.height; break;
-                case 1: x = canvas.width; y = Math.random() * canvas.height; break;
-                case 2: x = Math.random() * canvas.width; y = 0; break;
-                case 3: x = Math.random() * canvas.width; y = canvas.height; break;
+        function plant() {
+            if (resources >= 10) {
+                resources -= 10;
+                crops += 1;
+                animateAction();
+                updateUI("Вы посадили растение! 🌱");
+            } else {
+                updateUI("Недостаточно монет!");
             }
-            
-            enemies.push({
-                x, y,
-                size: 30,
-                speed: 2
-            });
         }
 
-        function resetGame() {
-            player.x = canvas.width / 2;
-            player.y = canvas.height / 2;
-            player.health = 100;
-            player.sins = 0;
-            enemies = [];
-            document.getElementById('health').textContent = player.health;
+        function harvest() {
+            if (crops > 0) {
+                crops -= 1;
+                resources += 20;
+                animateAction();
+                updateUI("Вы собрали урожай! 🌾");
+            } else {
+                updateUI("Нет урожая для сбора!");
+            }
         }
 
-        // Клик для атаки/поглощения грехов
-        canvas.addEventListener('click', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-            
-            // Проверка попадания по врагу
-            enemies.forEach(enemy => {
-                const dist = Math.sqrt(
-                    Math.pow(mouseX - enemy.x, 2) + 
-                    Math.pow(mouseY - enemy.y, 2)
-                );
-                
-                if (dist < enemy.size) {
-                    player.sins += 10;
-                    enemies = enemies.filter(e => e !== enemy);
-                }
-            });
-        });
+        function buyCow() {
+            if (resources >= 30) {
+                resources -= 30;
+                cows += 1;
+                animateAction();
+                updateUI("Вы купили корову! 🐮 Теперь можно получать молоко.");
+            } else {
+                updateUI("Недостаточно монет для коровы!");
+            }
+        }
 
-        // Старт игры
-        gameLoop();
+        function buyChicken() {
+            if (resources >= 15) {
+                resources -= 15;
+                chickens += 1;
+                animateAction();
+                updateUI("Вы купили курицу! 🐔 Теперь можно собирать яйца.");
+            } else {
+                updateUI("Недостаточно монет для курицы!");
+            }
+        }
+
+        function sell() {
+            if (resources >= 30) {
+                resources += 30;
+                animateAction();
+                updateUI("Вы продали продукцию! 💰");
+            } else {
+                updateUI("Нет продукции для продажи!");
+            }
+        }
+
+        function updateUI(message) {
+            document.getElementById("resources").innerText = resources;
+            document.getElementById("crops").innerText = crops;
+            document.getElementById("cows").innerText = cows;
+            document.getElementById("chickens").innerText = chickens;
+            document.getElementById("status").innerText = message;
+        }
+
+        function animateAction() {
+            document.getElementById("game-container").style.transform = "scale(1.1)";
+            setTimeout(() => {
+                document.getElementById("game-container").style.transform = "scale(1)";
+            }, 300);
+        }
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фермерская игра</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to bottom, #ffeb3b, #ff9800); /* Яркий солнечный градиент */
+            background-size: cover;
+            color: black;
+            transition: background 1s ease-in-out;
+            overflow: hidden;
+        }
+        #game-container {
+            border: 2px solid #4caf50;
+            padding: 20px;
+            margin: 20px auto;
+            width: 300px;
+            background-color: white;
+            transition: transform 0.3s ease-in-out;
+        }
+        button {
+            padding: 10px;
+            margin: 5px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* Анимация солнечных лучей */
+        .sun-rays {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 20%, rgba(255,255,255,0) 80%);
+            animation: shine 5s infinite alternate;
+        }
+
+        /* Плавное мерцание солнца */
+        @keyframes shine {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Фермерская игра 🌞🔥</h1>
+    <audio id="music" loop>
+        <source src="farm_music.mp3" type="audio/mpeg">
+    </audio>
+    <div class="sun-rays"></div> <!-- Эффект солнечных лучей -->
+    <div id="game-container">
+        <p>Ресурсы: <span id="resources">100</span> монет</p>
+        <p>Урожай: <span id="crops">0</span></p>
+        <p>Животные: Коров <span id="cows">0</span>, Кур <span id="chickens">0</span></p>
+        <button onclick="playMusic()">🎵 Включить музыку</button>
+        <button onclick="plant()">🌱 Посадить растение (-10 монет)</button>
+        <button onclick="harvest()">🌾 Собрать урожай (+20 монет)</button>
+        <button onclick="buyCow()">🐮 Купить корову (-30 монет)</button>
+        <button onclick="buyChicken()">🐔 Купить курицу (-15 монет)</button>
+        <button onclick="sell()">💰 Продать продукцию (+30 монет)</button>
+        <p id="status">Ожидание действий...</p>
+    </div>
+
+    <script>
+        let resources = 100;
+        let crops = 0;
+        let cows = 0;
+        let chickens = 0;
+        let music = document.getElementById("music");
+
+        function playMusic() {
+            music.play();
+            updateUI("Музыка включена! 🎵");
+        }
+
+        function plant() {
+            if (resources >= 10) {
+                resources -= 10;
+                crops += 1;
+                animateAction();
+                updateUI("Вы посадили растение! 🌱");
+            } else {
+                updateUI("Недостаточно монет!");
+            }
+        }
+
+        function harvest() {
+            if (crops > 0) {
+                crops -= 1;
+                resources += 20;
+                animateAction();
+                updateUI("Вы собрали урожай! 🌾");
+            } else {
+                updateUI("Нет урожая для сбора!");
+            }
+        }
+
+        function buyCow() {
+            if (resources >= 30) {
+                resources -= 30;
+                cows += 1;
+                animateAction();
+                updateUI("Вы купили корову! 🐮 Теперь можно получать молоко.");
+            } else {
+                updateUI("Недостаточно монет для коровы!");
+            }
+        }
+
+        function buyChicken() {
+            if (resources >= 15) {
+                resources -= 15;
+                chickens += 1;
+                animateAction();
+                updateUI("Вы купили курицу! 🐔 Теперь можно собирать яйца.");
+            } else {
+                updateUI("Недостаточно монет для курицы!");
+            }
+        }
+
+        function sell() {
+            if (resources >= 30) {
+                resources += 30;
+                animateAction();
+                updateUI("Вы продали продукцию! 💰");
+            } else {
+                updateUI("Нет продукции для продажи!");
+            }
+        }
+
+        function updateUI(message) {
+            document.getElementById("resources").innerText = resources;
+            document.getElementById("crops").innerText = crops;
+            document.getElementById("cows").innerText = cows;
+            document.getElementById("chickens").innerText = chickens;
+            document.getElementById("status").innerText = message;
+        }
+
+        function animateAction() {
+            document.getElementById("game-container").style.transform = "scale(1.1)";
+            setTimeout(() => {
+                document.getElementById("game-container").style.transform = "scale(1)";
+            }, 300);
+        }
     </script>
 </body>
 </html>
