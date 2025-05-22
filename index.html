@@ -1,335 +1,357 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RIDCOIN - Игра Beekeeper</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: #1a1a1a;
-            color: white;
-        }
-        .game-container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: #333;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .resource {
-            background: #444;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 5px;
-        }
-        .apiary {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .hive {
-            background: #555;
-            border: 2px solid #f39c12;
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-        }
-        .hive.selected {
-            background: #3a3a3a;
-            box-shadow: 0 0 10px #f39c12;
-        }
-        .btn {
-            background: #f39c12;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            margin: 5px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .btn:disabled {
-            background: #666;
-            cursor: not-allowed;
-        }
-        .events-log {
-            height: 200px;
-            overflow-y: auto;
-            background: #222;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-        .notification {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #2d572c;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            display: none;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RIDCOIN - Игра Beekeeper с наградой</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #1a1a1a;
+      color: white;
+    }
+    .game-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #333;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .resource {
+      background: #444;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 5px;
+    }
+    .apiary {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .hive {
+      background: #555;
+      border: 2px solid #f39c12;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .hive.selected {
+      background: #3a3a3a;
+      box-shadow: 0 0 10px #f39c12;
+    }
+    .btn {
+      background: #f39c12;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .btn:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    .events-log {
+      height: 200px;
+      overflow-y: auto;
+      background: #222;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+    .notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #2d572c;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      display: none;
+      z-index: 100;
+    }
+  </style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="game-header">
-            <h1>Beekeeper</h1>
-            <div>
-                <div class="resource">🍯 Мёд: <span id="honey-count">0</span></div>
-                <div class="resource">🪙 Монеты: <span id="coins-count">100</span></div>
-            </div>
-        </div>
-        
-        <div class="apiary" id="apiary">
-            <!-- Ульи будут здесь -->
-        </div>
-        
-        <div>
-            <button class="btn" id="buy-hive">Купить улей (50 🪙)</button>
-            <button class="btn" id="collect-honey" disabled>Собрать мёд</button>
-            <button class="btn" id="sell-honey" disabled>Продать мёд (10 🪙/🍯)</button>
-            <button class="btn" id="upgrade-hive" disabled>Улучшить улей (100 🪙)</button>
-        </div>
-        
-        <div class="events-log" id="game-events">
-            <div>Добро пожаловать в игру Beekeeper!</div>
-        </div>
+  <div class="game-container">
+    <div class="game-header">
+      <h1>Beekeeper</h1>
+      <div>
+        <div class="resource">🍯 Мёд: <span id="honey-count">0</span></div>
+        <div class="resource">🪙 Монеты: <span id="coins-count">100</span></div>
+      </div>
     </div>
 
-    <div class="notification" id="notification">Прогресс сохранён!</div>
+    <div class="apiary" id="apiary"></div>
 
-    <script>
-        // Состояние игры
-        const gameState = {
-            honey: 0,
-            coins: 100,
-            hives: [],
-            selectedHive: null,
-            hivePrice: 50,
-            honeyPrice: 10,
-            upgradePrice: 100,
-            lastSave: Date.now()
-        };
+    <div>
+      <button class="btn" id="buy-hive">Купить улей (50 🪙)</button>
+      <button class="btn" id="collect-honey" disabled>Собрать мёд</button>
+      <button class="btn" id="sell-honey" disabled>Продать мёд (10 🪙/🍯)</button>
+      <button class="btn" id="upgrade-hive" disabled>Улучшить улей (100 🪙)</button>
+      <button class="btn" id="withdraw-ridcoin" disabled>Вывести RIDCOIN</button>
+    </div>
 
-        // Элементы интерфейса
-        const elements = {
-            apiary: document.getElementById('apiary'),
-            honeyCount: document.getElementById('honey-count'),
-            coinsCount: document.getElementById('coins-count'),
-            buyHive: document.getElementById('buy-hive'),
-            collectHoney: document.getElementById('collect-honey'),
-            sellHoney: document.getElementById('sell-honey'),
-            upgradeHive: document.getElementById('upgrade-hive'),
-            gameEvents: document.getElementById('game-events'),
-            notification: document.getElementById('notification')
-        };
+    <div class="events-log" id="game-events">
+      <div>Добро пожаловать в игру Beekeeper!</div>
+    </div>
+  </div>
 
-        // Ключ для сохранения
-        const SAVE_KEY = 'beekeeper_save';
+  <div class="notification" id="notification">Прогресс сохранён!</div>
 
-        // Функции игры
-        function addEvent(message) {
-            const now = new Date();
-            const time = `[${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}]`;
-            const eventElement = document.createElement('div');
-            eventElement.innerHTML = `<strong>${time}</strong> ${message}`;
-            elements.gameEvents.prepend(eventElement);
-            
-            if (elements.gameEvents.children.length > 20) {
-                elements.gameEvents.removeChild(elements.gameEvents.lastChild);
-            }
-        }
+  <script>
+    const gameState = {
+      honey: 0,
+      coins: 100,
+      hives: [],
+      selectedHive: null,
+      hivePrice: 50,
+      honeyPrice: 10,
+      upgradePrice: 100,
+      lastSave: Date.now(),
+      notified: false
+    };
 
-        function showNotification(message) {
-            elements.notification.textContent = message;
-            elements.notification.style.display = 'block';
-            setTimeout(() => {
-                elements.notification.style.display = 'none';
-            }, 2000);
-        }
+    const elements = {
+      apiary: document.getElementById('apiary'),
+      honeyCount: document.getElementById('honey-count'),
+      coinsCount: document.getElementById('coins-count'),
+      buyHive: document.getElementById('buy-hive'),
+      collectHoney: document.getElementById('collect-honey'),
+      sellHoney: document.getElementById('sell-honey'),
+      upgradeHive: document.getElementById('upgrade-hive'),
+      withdrawRidcoin: document.getElementById('withdraw-ridcoin'),
+      gameEvents: document.getElementById('game-events'),
+      notification: document.getElementById('notification')
+    };
 
-        function updateUI() {
-            elements.honeyCount.textContent = gameState.honey;
-            elements.coinsCount.textContent = gameState.coins;
-            
-            elements.buyHive.textContent = `Купить улей (${gameState.hivePrice} 🪙)`;
-            elements.buyHive.disabled = gameState.coins < gameState.hivePrice;
-            
-            elements.sellHoney.disabled = gameState.honey < 1;
-            elements.collectHoney.disabled = gameState.selectedHive === null;
-            elements.upgradeHive.disabled = gameState.selectedHive === null || gameState.coins < gameState.upgradePrice;
-        }
+    const SAVE_KEY = 'beekeeper_save';
 
-        function renderHives() {
-            elements.apiary.innerHTML = '';
-            
-            if (gameState.hives.length === 0) {
-                elements.apiary.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;">Купите первый улей</div>';
-                return;
-            }
-            
-            gameState.hives.forEach((hive, index) => {
-                const hiveElement = document.createElement('div');
-                hiveElement.className = `hive ${gameState.selectedHive === index ? 'selected' : ''}`;
-                hiveElement.innerHTML = `
-                    <div style="font-size:24px;">🐝</div>
-                    <div>Улей #${index + 1}</div>
-                    <div>Уровень ${hive.level}</div>
-                `;
-                
-                hiveElement.addEventListener('click', () => {
-                    gameState.selectedHive = index;
-                    renderHives();
-                    updateUI();
-                    addEvent(`Выбран улей #${index + 1}`);
-                });
-                
-                elements.apiary.appendChild(hiveElement);
-            });
-        }
+    function addEvent(message) {
+      const now = new Date();
+      const time = `[${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}]`;
+      const eventElement = document.createElement('div');
+      eventElement.innerHTML = `<strong>${time}</strong> ${message}`;
+      elements.gameEvents.prepend(eventElement);
+      if (elements.gameEvents.children.length > 20) {
+        elements.gameEvents.removeChild(elements.gameEvents.lastChild);
+      }
+    }
 
-        function produceHoney() {
-            gameState.hives.forEach((hive, index) => {
-                const produced = hive.level * 0.5;
-                gameState.honey += produced;
-                if (produced > 0) {
-                    addEvent(`Улей #${index + 1} произвел ${produced.toFixed(1)} 🍯`);
-                }
-            });
-            updateUI();
-        }
+    function showNotification(message) {
+      elements.notification.textContent = message;
+      elements.notification.style.display = 'block';
+      setTimeout(() => {
+        elements.notification.style.display = 'none';
+      }, 2000);
+    }
 
-        // Система сохранения
-        function saveGame() {
-            gameState.lastSave = Date.now();
-            localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
-            showNotification('Прогресс сохранён!');
-        }
+    function updateUI() {
+      elements.honeyCount.textContent = Math.floor(gameState.honey);
+      elements.coinsCount.textContent = Math.floor(gameState.coins);
 
-        function loadGame() {
-            const savedData = localStorage.getItem(SAVE_KEY);
-            if (savedData) {
-                try {
-                    const savedState = JSON.parse(savedData);
-                    
-                    // Восстанавливаем основные параметры
-                    gameState.honey = savedState.honey || 0;
-                    gameState.coins = savedState.coins || 100;
-                    gameState.hives = savedState.hives || [];
-                    gameState.hivePrice = savedState.hivePrice || 50;
-                    gameState.upgradePrice = savedState.upgradePrice || 100;
-                    gameState.selectedHive = savedState.selectedHive !== undefined ? savedState.selectedHive : null;
-                    
-                    // Рассчитываем оффлайн-продукцию
-                    const offlineTime = Date.now() - (savedState.lastSave || Date.now());
-                    if (offlineTime > 5000) { // Если прошло больше 5 секунд
-                        const offlineHours = offlineTime / (1000 * 60 * 60); // В часах
-                        const maxOfflineHours = 24; // Максимум 24 часа
-                        const effectiveHours = Math.min(offlineHours, maxOfflineHours);
-                        
-                        let offlineHoney = 0;
-                        gameState.hives.forEach(hive => {
-                            offlineHoney += hive.level * effectiveHours;
-                        });
-                        
-                        gameState.honey += Math.floor(offlineHoney);
-                        addEvent(`За время отсутствия: +${Math.floor(offlineHoney)} 🍯`);
-                    }
-                    
-                    addEvent("Игра загружена");
-                } catch (e) {
-                    console.error("Ошибка загрузки сохранения:", e);
-                    addEvent("Новая игра начата");
-                }
-            } else {
-                addEvent("Новая игра начата");
-            }
-        }
+      elements.buyHive.textContent = `Купить улей (${gameState.hivePrice} 🪙)`;
+      elements.buyHive.disabled = gameState.coins < gameState.hivePrice;
+      elements.sellHoney.disabled = gameState.honey < 1;
+      elements.collectHoney.disabled = gameState.selectedHive === null;
+      elements.upgradeHive.disabled = gameState.selectedHive === null || gameState.coins < gameState.upgradePrice;
+      elements.withdrawRidcoin.disabled = gameState.coins < 1000000;
+    }
 
-        // Обработчики событий
-        elements.buyHive.addEventListener('click', () => {
-            if (gameState.coins >= gameState.hivePrice) {
-                gameState.coins -= gameState.hivePrice;
-                gameState.hives.push({ level: 1 });
-                gameState.hivePrice = Math.floor(gameState.hivePrice * 1.2);
-                
-                if (gameState.hives.length === 1) {
-                    gameState.selectedHive = 0;
-                    addEvent("Первый улей автоматически выбран");
-                }
-                
-                addEvent(`Куплен новый улей за ${gameState.hivePrice} 🪙`);
-                renderHives();
-                updateUI();
-                saveGame();
-            }
+    function renderHives() {
+      elements.apiary.innerHTML = '';
+      if (gameState.hives.length === 0) {
+        elements.apiary.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;">Купите первый улей</div>';
+        return;
+      }
+      gameState.hives.forEach((hive, index) => {
+        const hiveElement = document.createElement('div');
+        hiveElement.className = `hive ${gameState.selectedHive === index ? 'selected' : ''}`;
+        hiveElement.innerHTML = `<div style="font-size:24px;">🐝</div><div>Улей #${index + 1}</div><div>Уровень ${hive.level}</div>`;
+        hiveElement.addEventListener('click', () => {
+          gameState.selectedHive = index;
+          renderHives();
+          updateUI();
+          addEvent(`Выбран улей #${index + 1}`);
         });
+        elements.apiary.appendChild(hiveElement);
+      });
+    }
 
-        elements.collectHoney.addEventListener('click', () => {
-            if (gameState.selectedHive !== null) {
-                const collected = gameState.hives[gameState.selectedHive].level * 2;
-                gameState.honey += collected;
-                addEvent(`Собрано ${collected} 🍯 с улья #${gameState.selectedHive + 1}`);
-                updateUI();
-                saveGame();
-            }
-        });
+    function produceHoney() {
+      gameState.hives.forEach((hive, index) => {
+        const produced = hive.level * 0.5;
+        gameState.honey += produced;
+        addEvent(`Улей #${index + 1} произвёл ${produced.toFixed(1)} 🍯`);
+      });
+      updateUI();
+      checkTelegramNotification();
+    }
 
-        elements.sellHoney.addEventListener('click', () => {
-            if (gameState.honey > 0) {
-                const earned = gameState.honey * gameState.honeyPrice;
-                gameState.coins += earned;
-                addEvent(`Продано ${gameState.honey} 🍯 за ${earned} 🪙`);
-                gameState.honey = 0;
-                updateUI();
-                saveGame();
-            }
-        });
+    function checkTelegramNotification() {
+      if (gameState.coins >= 1000000 && !gameState.notified) {
+        sendTelegramMessage();
+      }
+    }
 
-        elements.upgradeHive.addEventListener('click', () => {
-            if (gameState.selectedHive !== null && gameState.coins >= gameState.upgradePrice) {
-                const hive = gameState.hives[gameState.selectedHive];
-                gameState.coins -= gameState.upgradePrice;
-                hive.level += 1;
-                gameState.upgradePrice = Math.floor(gameState.upgradePrice * 1.5);
-                
-                addEvent(`Улей #${gameState.selectedHive + 1} улучшен до уровня ${hive.level}`);
-                renderHives();
-                updateUI();
-                saveGame();
-            }
-        });
+    function saveGame() {
+      gameState.lastSave = Date.now();
+      localStorage.setItem(SAVE_KEY, JSON.stringify(gameState));
+      showNotification('Прогресс сохранён!');
+    }
 
-        // Инициализация игры
-        function initGame() {
-            loadGame();
-            updateUI();
-            renderHives();
-            
-            // Автоматическое производство мёда
-            setInterval(() => {
-                produceHoney();
-                // Периодическое автосохранение
-                if (Math.random() < 0.1) saveGame();
-            }, 3000);
-            
-            // Сохранение при закрытии страницы
-            window.addEventListener('beforeunload', saveGame);
+    function loadGame() {
+      const savedData = localStorage.getItem(SAVE_KEY);
+      if (savedData) {
+        try {
+          const savedState = JSON.parse(savedData);
+          gameState.honey = savedState.honey || 0;
+          gameState.coins = savedState.coins || 100;
+          gameState.hives = savedState.hives || [];
+          gameState.hivePrice = savedState.hivePrice || 50;
+          gameState.upgradePrice = savedState.upgradePrice || 100;
+          gameState.selectedHive = savedState.selectedHive ?? null;
+          gameState.notified = savedState.notified || false;
+
+          const offlineTime = Date.now() - (savedState.lastSave || Date.now());
+          if (offlineTime > 5000) {
+            const hours = Math.min(offlineTime / 3600000, 24);
+            let offlineHoney = 0;
+            gameState.hives.forEach(h => offlineHoney += h.level * hours);
+            gameState.honey += Math.floor(offlineHoney);
+            addEvent(`За время отсутствия: +${Math.floor(offlineHoney)} 🍯`);
+          }
+
+          addEvent("Игра загружена");
+        } catch {
+          addEvent("Новая игра начата");
         }
+      } else {
+        addEvent("Новая игра начата");
+      }
+    }
 
-        // Запуск игры
-        window.onload = initGame;
-    </script>
+    elements.buyHive.addEventListener('click', () => {
+      if (gameState.coins >= gameState.hivePrice) {
+        gameState.coins -= gameState.hivePrice;
+        gameState.hives.push({ level: 1 });
+        gameState.hivePrice = Math.floor(gameState.hivePrice * 1.2);
+        if (gameState.hives.length === 1) gameState.selectedHive = 0;
+        addEvent(`Куплен новый улей`);
+        renderHives();
+        updateUI();
+        saveGame();
+      }
+    });
+
+    elements.collectHoney.addEventListener('click', () => {
+      if (gameState.selectedHive !== null) {
+        const collected = gameState.hives[gameState.selectedHive].level * 2;
+        gameState.honey += collected;
+        addEvent(`Собрано ${collected} 🍯 с улья #${gameState.selectedHive + 1}`);
+        updateUI();
+        saveGame();
+      }
+    });
+
+    elements.sellHoney.addEventListener('click', () => {
+      if (gameState.honey > 0) {
+        const earned = gameState.honey * gameState.honeyPrice;
+        gameState.coins += earned;
+        addEvent(`Продано ${gameState.honey} 🍯 за ${earned} 🪙`);
+        gameState.honey = 0;
+        updateUI();
+        saveGame();
+        checkTelegramNotification();
+      }
+    });
+
+    elements.upgradeHive.addEventListener('click', () => {
+      if (gameState.selectedHive !== null && gameState.coins >= gameState.upgradePrice) {
+        const hive = gameState.hives[gameState.selectedHive];
+        gameState.coins -= gameState.upgradePrice;
+        hive.level += 1;
+        gameState.upgradePrice = Math.floor(gameState.upgradePrice * 1.5);
+        addEvent(`Улей #${gameState.selectedHive + 1} улучшен до уровня ${hive.level}`);
+        renderHives();
+        updateUI();
+        saveGame();
+      }
+    });
+
+    elements.withdrawRidcoin.addEventListener('click', () => {
+      if (gameState.coins >= 1000000) {
+        const wallet = prompt("Введите адрес кошелька (Polygon):");
+        if (wallet && wallet.startsWith("0x") && wallet.length === 42) {
+          sendTelegramMessage(wallet);
+          addEvent("Запрос на вывод отправлен в Telegram.");
+          gameState.coins -= 1000000;
+          updateUI();
+          saveGame();
+        } else {
+          addEvent("Неверный адрес кошелька.");
+        }
+      }
+    });
+
+    const botToken = "7869636859:AAFckwOAg2K810fHd744nwutwR4Kuu9ajBc";
+    const chatId = "7323598479";
+
+    function sendTelegramMessage(walletAddress) {
+      let message;
+      if (walletAddress) {
+        message = `Игрок запросил вывод RIDCOIN!\nАдрес: ${walletAddress}\nМонет: ${gameState.coins}\nМёда: ${gameState.honey}`;
+      } else {
+        message = `Поздравляем! Вы заработали 1 000 000 монет и получили 1 Ridcoin.`;
+      }
+
+      fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: message
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok) {
+          if (!walletAddress) {
+            gameState.notified = true;
+            saveGame();
+          }
+          addEvent("Telegram уведомление отправлено.");
+        } else {
+          addEvent("Ошибка Telegram: " + data.description);
+        }
+      })
+      .catch(() => {
+        addEvent("Сбой при отправке в Telegram.");
+      });
+    }
+
+    function initGame() {
+      loadGame();
+      updateUI();
+      renderHives();
+      setInterval(() => {
+        produceHoney();
+        if (Math.random() < 0.1) saveGame();
+      }, 3000);
+      window.addEventListener('beforeunload', saveGame);
+    }
+
+    window.onload = initGame;
+  </script>
 </body>
 </html>
