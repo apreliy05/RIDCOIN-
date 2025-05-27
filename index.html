@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <title>RiDcoin Вклад с WalletConnect (Trust Wallet)</title>
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
-<script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
 <style>
+  /* ваш стили (по предыдущему примеру) */
   body {
     font-family: Arial, sans-serif;
     max-width: 600px;
@@ -83,6 +82,10 @@
 
   <div id="status"></div>
 </div>
+
+<!-- Подключаем ethers.js и WalletConnect перед скриптом -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+<script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
 
 <script>
   (function(){
@@ -169,7 +172,7 @@
         statusDiv.textContent = "Кошелёк подключён, готово к отправке.";
       } catch (e) {
         if (e.message && e.message.includes("User closed modal")) {
-          // Уже обработано в initWalletConnectProvider, не выводим повторно
+          // Ошибка закрытия окна QR — уже обработана, не показываем повторно
         } else {
           statusDiv.textContent = "Ошибка подключения: " + e.message;
         }
@@ -202,7 +205,7 @@
 
       try {
         const amountWei = ethers.utils.parseUnits(amountNum.toString(), decimals);
-        // Адрес проекта, куда отправляются вклады
+        // Адрес проекта для вкладов (можете изменить)
         const recipientAddress = tokenAddress;
 
         const tx = await tokenContract.transfer(recipientAddress, amountWei);
