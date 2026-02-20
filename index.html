@@ -1249,6 +1249,18 @@ async function createAccount() {
         console.warn('Не удалось списать с RIDCOIN:', e);
         await saveUser(username);
     }
+
+    // Добавляем в usersMeta для отображения в списке
+    try {
+        await db.ref(`usersMeta/${username}`).set({
+            balance: 1,
+            admin: false,
+            hidden: false
+        });
+    } catch(e) {
+        console.warn('Не удалось обновить usersMeta:', e);
+    }
+
     await decrementAirdropFund();
     hideLoading();
     hideRegisterModal();
